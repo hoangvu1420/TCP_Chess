@@ -10,6 +10,7 @@
 # Executable files
 *.out
 *.exe
+a.out
 
 # Debug files
 *.dSYM/
@@ -26,3 +27,18 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# GCC compiler files
+*.d
+
+# Exclude compiled files with no extension
+*
+!*/
+!*.*
+
+# Ignore all markdown files except README.md
+*.md
+!README.md
+
+# Visual Studio Code directory
+.vscode/
