@@ -1,0 +1,28 @@
+# Compiled object files
+*.o
+
+# Compiled dynamic libraries
+*.so
+
+# Compiled static libraries
+*.a
+
+# Executable files
+*.out
+*.exe
+
+# Debug files
+*.dSYM/
+*.stackdump
+
+# System files
+.DS_Store
+Thumbs.db
+
+# CMake build directory
+/build/
+
+# User-specific files
+*.swp
+*.swo
+*~
