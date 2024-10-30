@@ -1113,6 +1113,39 @@ class Piece {
 
     explicit operator std::string() const {
         switch (piece) {
+            // white
+            case WHITEPAWN:
+                return "P";
+            case WHITEKNIGHT:
+                return "N";
+            case WHITEBISHOP:
+                return "B";
+            case WHITEROOK:
+                return "R";
+            case WHITEQUEEN:
+                return "Q";
+            case WHITEKING:
+                return "K";
+            // black
+            case BLACKPAWN:
+                return "p";
+            case BLACKKNIGHT:
+                return "n";
+            case BLACKBISHOP:
+                return "b";
+            case BLACKROOK:
+                return "r";
+            case BLACKQUEEN:
+                return "q";
+            case BLACKKING:
+                return "k";
+            default:
+                return ".";
+        }
+    }
+
+    std::string getSymbol() const {
+        switch (piece) {
             case WHITEPAWN:
                 return "♙";
             case WHITEKNIGHT:

@@ -4,8 +4,6 @@
 #include <cstring>
 #include "chess.hpp"
 
-using namespace chess;
-
 // ANSI color codes
 const std::string RESET = "\033[0m";
 const std::string WHITE_COLOR = "\033[96m"; // Cyan
@@ -17,18 +15,18 @@ const std::string LABEL_COLOR = "\033[34m"; // Orange
 #define SPACE " "
 
 // Function to determine if a piece is white
-bool isWhitePiece(const Piece &piece)
+bool isWhitePiece(const chess::Piece &piece)
 {
-    return piece.color() == Color::WHITE;
+    return piece.color() == chess::Color::WHITE;
 }
 
 // Function to determine if a piece is black
-bool isBlackPiece(const Piece &piece)
+bool isBlackPiece(const chess::Piece &piece)
 {
-    return piece.color() == Color::BLACK;
+    return piece.color() == chess::Color::BLACK;
 }
 
-void printLine(int iLine, const char *pchColor1, const char *pchColor2, const Board &board, bool flip)
+void printLine(int iLine, const char *pchColor1, const char *pchColor2, const chess::Board &board, bool flip)
 {
     const int CELL = 6; // Number of characters per cell vertically
 
@@ -43,16 +41,16 @@ void printLine(int iLine, const char *pchColor1, const char *pchColor2, const Bo
                 if (subLine == 1 && subColumn == 2)
                 {
                     // Determine the square index based on the board orientation (flipped or not)
-                    Square sq1 = flip ? Square((7 - iLine) * 8 + (7 - iPair * 2)) : Square(iLine * 8 + iPair * 2);
-                    Piece piece1 = board.at(sq1);
+                    chess::Square sq1 = flip ? chess::Square((7 - iLine) * 8 + (7 - iPair * 2)) : chess::Square(iLine * 8 + iPair * 2);
+                    chess::Piece piece1 = board.at(sq1);
 
-                    if (piece1 != Piece::NONE)
+                    if (piece1 != chess::Piece::NONE)
                     {
                         // Apply color based on piece color and print the Unicode symbol
                         if (isWhitePiece(piece1))
-                            std::cout << WHITE_COLOR << static_cast<std::string>(piece1) << RESET;
+                            std::cout << WHITE_COLOR << piece1.getSymbol() << RESET;
                         else if (isBlackPiece(piece1))
-                            std::cout << BLACK_COLOR << static_cast<std::string>(piece1) << RESET;
+                            std::cout << BLACK_COLOR << piece1.getSymbol() << RESET;
                         else
                             std::cout << pchColor1; // Fallback to square color if color is NONE
                         hasPiece1 = true;           // Set flag since a piece is present
@@ -83,16 +81,16 @@ void printLine(int iLine, const char *pchColor1, const char *pchColor2, const Bo
                 if (subLine == 1 && subColumn == 2)
                 {
                     // Determine the square index based on the board orientation (flipped or not)
-                    Square sq2 = flip ? Square((7 - iLine) * 8 + (7 - iPair * 2 - 1)) : Square(iLine * 8 + iPair * 2 + 1);
-                    Piece piece2 = board.at(sq2);
+                    chess::Square sq2 = flip ? chess::Square((7 - iLine) * 8 + (7 - iPair * 2 - 1)) : chess::Square(iLine * 8 + iPair * 2 + 1);
+                    chess::Piece piece2 = board.at(sq2);
 
-                    if (piece2 != Piece::NONE)
+                    if (piece2 != chess::Piece::NONE)
                     {
                         // Apply color based on piece color and print the Unicode symbol
                         if (isWhitePiece(piece2))
-                            std::cout << WHITE_COLOR << static_cast<std::string>(piece2) << RESET;
+                            std::cout << WHITE_COLOR << piece2.getSymbol() << RESET;
                         else if (isBlackPiece(piece2))
-                            std::cout << BLACK_COLOR << static_cast<std::string>(piece2) << RESET;
+                            std::cout << BLACK_COLOR << piece2.getSymbol() << RESET;
                         else
                             std::cout << pchColor2; // Fallback to square color if color is NONE
                         hasPiece2 = true;           // Set flag since a piece is present
@@ -126,7 +124,7 @@ void printLine(int iLine, const char *pchColor1, const char *pchColor2, const Bo
     }
 }
 
-void printBoard(const Board &board, bool flip)
+void printBoard(const chess::Board &board, bool flip)
 {
     // Colored labels at the top
     if (flip)
@@ -195,28 +193,30 @@ void printBoard(const Board &board, bool flip)
 
 int main()
 {
-    Board board(chess::constants::STARTPOS);
+    const char *initFen = (const char *)"r1bqr1k1/ppp1bppp/2n5/3np3/8/2NP1NP1/PP1BPPBP/R2QK2R w KQ - 3 9";
+    // const char* initFen = chess::constants::STARTPOS;
+    chess::Board board(initFen);
     std::string uciMove;
-    GameResult result = GameResult::NONE;
-    GameResultReason reason = GameResultReason::NONE;
+    chess::GameResult result = chess::GameResult::NONE;
+    chess::GameResultReason reason = chess::GameResultReason::NONE;
     bool isWhiteTurn = true;
 
-    while (result == GameResult::NONE)
+    while (result == chess::GameResult::NONE)
     {
         printBoard(board, !isWhiteTurn);
         std::cout << "It is " << (isWhiteTurn ? "White" : "Black") << "'s turn." << std::endl;
         std::cout << "Enter your move (UCI format): ";
         std::cin >> uciMove;
 
-        Move move = uci::uciToMove(board, uciMove);
-        if (move == Move::NO_MOVE)
+        chess::Move move = chess::uci::uciToMove(board, uciMove);
+        if (move == chess::Move::NO_MOVE)
         {
             std::cout << "Invalid move. Try again." << std::endl;
             continue;
         }
 
-        Movelist moves;
-        movegen::legalmoves(moves, board);
+        chess::Movelist moves;
+        chess::movegen::legalmoves(moves, board);
         if (std::find(moves.begin(), moves.end(), move) == moves.end())
         {
             std::cout << "Illegal move. Try again." << std::endl;
@@ -228,23 +228,19 @@ int main()
         isWhiteTurn = !isWhiteTurn;
     }
 
-    std::cout << "Game over! Result: ";
+    std::cout << "Game over! Result: " << std::endl;
     switch (result)
     {
-    case GameResult::WIN:
-        std::cout << "Win";
+    case chess::GameResult::LOSE:
+        std::cout << (isWhiteTurn ? "Black" : "White") << " wins!" << " Due to " << static_cast<int>(reason) << std::endl;
         break;
-    case GameResult::LOSE:
-        std::cout << "Lose";
-        break;
-    case GameResult::DRAW:
-        std::cout << "Draw";
+    case chess::GameResult::DRAW:
+        std::cout << "Draw!" << " Due to " << static_cast<int>(reason) << std::endl;
         break;
     default:
         std::cout << "None";
         break;
     }
-    std::cout << " due to " << static_cast<int>(reason) << std::endl;
 
     return 0;
 }
