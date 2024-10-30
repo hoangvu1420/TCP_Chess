@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "build server",
+        "type": "shell",
+        "command": "g++",
+        "args": [
+          "-g",
+          "${workspaceFolder}/server/server_main.cpp",
+          "-o",
+          "${workspaceFolder}/server/server",
+          "-lpthread"
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": ["$gcc"]
+      },
+      {
+        "label": "build client",
+        "type": "shell",
+        "command": "g++",
+        "args": [
+          "-g",
+          "${workspaceFolder}/client/client_main.cpp",
+          "-o",
+          "${workspaceFolder}/client/client",
+          "-lpthread"
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": ["$gcc"]
+      }
+    ]
+  }
