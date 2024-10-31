@@ -1,10 +1,13 @@
 #include <iostream>
 #include <string>
-#include <cstring>
+#include <vector>
+#include <cstdint>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+
 #include "../chess_engine/chess.hpp"
+#include "../common/utils.hpp"
 
 #define PORT 8088
 #define BUFFER_SIZE 1024
@@ -17,33 +20,38 @@
 #define TURN_NOTIFICATION 0x05
 
 // Hàm gửi thông điệp
-int send_message(int sock, unsigned char type, const std::string &payload)
+int send_message(int sock, uint8_t type, const std::string &payload)
 {
-    unsigned char buffer[BUFFER_SIZE];
-    buffer[0] = type;
-    unsigned short length = payload.size();
-    buffer[1] = (length >> 8) & 0xFF; // Big-endian
-    buffer[2] = length & 0xFF;
-    memcpy(buffer + 3, payload.c_str(), length);
-    return send(sock, buffer, 3 + length, 0);
+    std::vector<uint8_t> packet;
+    
+    packet.push_back(type);
+    uint16_t length = payload.size();
+
+    std::vector<uint8_t> length_bytes = to_big_endian_16(length);
+    packet.insert(packet.end(), length_bytes.begin(), length_bytes.end());
+    packet.insert(packet.end(), payload.begin(), payload.end());
+
+    return send(sock, packet.data(), packet.size(), 0);
 }
 
 // Hàm nhận thông điệp
-bool receive_message(int sock, unsigned char &type, std::string &payload)
+bool receive_message(int sock, uint8_t &type, std::string &payload)
 {
-    unsigned char header[3];
-    int bytes = recv(sock, header, 3, MSG_WAITALL);
+    std::vector<uint8_t> header(3);
+
+    int bytes = recv(sock, header.data(), 3, MSG_WAITALL);
     if (bytes <= 0)
         return false;
     type = header[0];
-    unsigned short length = (header[1] << 8) | header[2];
+
+    uint16_t length = from_big_endian_16(header, 1);
     if (length > 0)
     {
-        char data[length];
-        bytes = recv(sock, data, length, MSG_WAITALL);
+        std::vector<char> data(length);
+        bytes = recv(sock, data.data(), length, MSG_WAITALL);
         if (bytes <= 0)
             return false;
-        payload.assign(data, length);
+        payload.assign(data.begin(), data.end());
     }
     else
     {
@@ -74,7 +82,7 @@ int main()
     int server_sock, client1_sock, client2_sock;
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(struct sockaddr_in);
-    unsigned char type;
+    uint8_t type;
     std::string payload;
 
     // Tạo socket
@@ -132,7 +140,6 @@ int main()
     send_message(client2_sock, PLAYER_ID, "2");
 
     // Khởi tạo bàn cờ
-    // const char *initFen = (const char *)"8/8/8/k2K4/3N4/1Q6/8/8 w - - 2 86";
     const char *initFen = chess::constants::STARTPOS;
     chess::Board board(initFen);
     chess::GameResult result = chess::GameResult::NONE;
