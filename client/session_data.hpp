@@ -12,6 +12,12 @@ struct GameStatus
     std::string fen = "";
 };
 
+/**
+ * @brief Singleton quản lý dữ liệu phiên làm việc của người dùng.
+ * 
+ * Lưu trữ thông tin như tên người dùng, trạng thái trò chơi, điểm ELO, 
+ * và kiểm soát trạng thái hoạt động. Đảm bảo truy cập dữ liệu an toàn trong môi trường đa luồng.
+ */
 class SessionData {
 public:
     static SessionData& getInstance() {
