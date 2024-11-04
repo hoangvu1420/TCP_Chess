@@ -17,6 +17,12 @@
 
 #include "session_data.hpp"
 
+/**
+ * @brief Singleton quản lý kết nối mạng TCP với máy chủ.
+ *
+ * Lớp NetworkClient là một singleton dùng để thiết lập và duy trì kết nối TCP với máy chủ.
+ * Nó cung cấp các phương thức để gửi và nhận gói tin, đảm bảo tính thread-safe khi gửi dữ liệu.
+ */
 class NetworkClient
 {
 private:
@@ -24,6 +30,15 @@ private:
     std::vector<uint8_t> buffer;
     std::mutex send_mutex;
 
+    /**
+     * @brief Kết nối đến máy chủ với IP và cổng được cung cấp.
+     *
+     * Tạo socket, thiết lập timeout, và kết nối TCP tới máy chủ. Xử lý các lỗi liên quan.
+     *
+     * @param ip IP của máy chủ.
+     * @param port Cổng của máy chủ.
+     * @return true nếu kết nối thành công, false nếu thất bại.
+     */
     bool connectToServer(const std::string &ip, uint16_t port)
     {
         socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -91,6 +106,13 @@ public:
         return instance;
     }
 
+    /**
+     * Gửi một gói tin tới máy chủ.
+     *
+     * @param messageType Kiểu của thông điệp.
+     * @param payload Dữ liệu của gói tin.
+     * @return Trả về true nếu gửi thành công, ngược lại trả về false.
+     */
     bool sendPacket(MessageType messageType, const std::vector<uint8_t> &payload)
     {
         std::lock_guard<std::mutex> lock(send_mutex);
@@ -113,6 +135,12 @@ public:
         return true;
     }
 
+    /**
+     * Nhận một gói tin từ socket.
+     *
+     * @param packet Tham chiếu đến đối tượng Packet để lưu dữ liệu nhận được.
+     * @return Trả về true nếu nhận thành công, false nếu không có dữ liệu hoặc kết nối đóng.
+     */
     bool receivePacket(Packet &packet)
     {
         uint8_t temp_buffer[Const::BUFFER_SIZE];
