@@ -13,7 +13,6 @@ void handleClient(int client_fd);
 
 int main()
 {
-
     // Khởi tạo NetworkServer
     NetworkServer &network_server = NetworkServer::getInstance();
 
