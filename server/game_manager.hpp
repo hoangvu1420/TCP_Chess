@@ -17,6 +17,14 @@
 #include "data_storage.hpp"
 #include "network_server.hpp"
 
+/**
+ * @class Game
+ * @brief Quản lý trạng thái và logic của một ván cờ.
+ * 
+ * Lớp này bao gồm các thông tin về người chơi, trạng thái bàn cờ, 
+ * lượt chơi hiện tại, và các phương thức để thực hiện nước đi, 
+ * kiểm tra trạng thái kết thúc của trò chơi, và các thông tin liên quan khác.
+ */
 class Game
 {
 public:
@@ -178,6 +186,27 @@ struct PendingGame
           player1_accepted(false), player2_accepted(false) {}
 };
 
+/**
+ * @class GameManager
+ * @brief Quản lý các ván cờ và hệ thống ghép trận.
+ * 
+ * Lớp này chịu trách nhiệm quản lý các ván cờ đang diễn ra, 
+ * xử lý các yêu cầu di chuyển, và ghép trận cho người chơi. 
+ * Sử dụng Singleton pattern để đảm bảo chỉ có một instance duy nhất.
+ * 
+ * Các chức năng chính bao gồm:
+ * 
+ * - Tạo và quản lý các ván cờ.
+ * 
+ * - Xử lý các yêu cầu di chuyển từ người chơi.
+ * 
+ * - Ghép trận tự động dựa trên ELO của người chơi.
+ * 
+ * - Gửi thông báo về trạng thái trò chơi và kết quả trận đấu cho người chơi.
+ * 
+ * - Quản lý hàng đợi ghép trận và xử lý các yêu cầu chấp nhận hoặc từ chối ghép trận.
+ * 
+ */
 class GameManager
 {
 private:
@@ -195,6 +224,25 @@ private:
     // Private constructor for Singleton
     GameManager() : stop_matching(false), matchmaking_thread(&GameManager::matchmakingLoop, this) {}
 
+    /**
+     * @brief Vòng lặp quản lý tìm kiếm trận đấu.
+     * 
+     * Hàm này liên tục kiểm tra hàng đợi tìm kiếm để ghép cặp người chơi.
+     * 
+     * - Chờ đợi đến khi có ít nhất 2 người chơi trong hàng đợi hoặc khi nhận được tín hiệu dừng.
+     * 
+     * - Nếu nhận được tín hiệu dừng, dừng vòng lặp.
+     * 
+     * - Khi có đủ hai người chơi, lấy hai người từ hàng đợi và kiểm tra sự khác biệt ELO.
+     * 
+     *   - 1. Nếu sự khác biệt ELO nhỏ hơn hoặc bằng ngưỡng cho phép, tạo trận đấu mới và gửi thông báo cho cả hai người chơi.
+     * 
+     *   - 2. Nếu không, đưa lại hai người chơi vào hàng đợi.
+     * 
+     * - Sleep 1 giây trước khi lặp lại vòng lặp.
+     * 
+     * @note Hàm này chạy trong một luồng riêng và sử dụng mutex cùng điều kiện biến để quản lý truy cập vào hàng đợi tìm kiếm.
+     */
     void matchmakingLoop()
     {
         int count = 0;
@@ -287,6 +335,14 @@ public:
         return instance;
     }
 
+    /**
+     * Tạo trận đấu mới với tên người chơi trắng và đen, và tình huống FEN ban đầu.
+     *
+     * @param player_white_name Tên người chơi trắng.
+     * @param player_black_name Tên người chơi đen.
+     * @param initial_fen State ban đầu của ván cờ (mặc định: STARTPOS).
+     * @return Mã định danh của trận đấu được tạo.
+     */
     std::string createGame(const std::string &player_white_name, const std::string &player_black_name, const std::string &initial_fen = chess::constants::STARTPOS)
     {
         std::lock_guard<std::mutex> lock(games_mutex);
@@ -335,6 +391,22 @@ public:
         return games.erase(id) > 0;
     }
 
+    /**
+     * Xử lý nước đi được gửi từ người chơi.
+     *
+     * @param client_fd Định danh của kết nối khách hàng gửi nước đi.
+     * @param game_id ID của trò chơi hiện tại.
+     * @param uci_move Nước đi được mô tả theo định dạng UCI.
+     *
+     * Hàm này thực hiện các bước sau:
+     * 
+     * 1. Thực hiện nước đi và kiểm tra tính hợp lệ.
+     * 
+     * 2. Cập nhật trạng thái trò chơi và gửi thông báo cập nhật trạng thái đến cả hai người chơi.
+     * 
+     * 3. Kiểm tra xem trò chơi đã kết thúc chưa, nếu có thì gửi thông báo kết thúc trò chơi và loại bỏ trò chơi khỏi hệ thống.
+     * 
+     */
     void handleMove(int client_fd, const std::string &game_id, const std::string &uci_move)
     {
         if (makeMove(game_id, uci_move))
@@ -365,11 +437,8 @@ public:
 
             std::vector<uint8_t> serialized = game_status_update_msg.serialize();
 
-            int player_white_fd = network_server.getClientFD(player_white_name);
-            int player_black_fd = network_server.getClientFD(player_black_name);
-
-            network_server.sendPacket(player_white_fd, MessageType::GAME_STATUS_UPDATE, serialized);
-            network_server.sendPacket(player_black_fd, MessageType::GAME_STATUS_UPDATE, serialized);
+            network_server.sendPacketToUsername(player_white_name, MessageType::GAME_STATUS_UPDATE, serialized);
+            network_server.sendPacketToUsername(player_black_name, MessageType::GAME_STATUS_UPDATE, serialized);
 
             if (is_game_over)
             {
@@ -387,8 +456,8 @@ public:
 
                 std::vector<uint8_t> serialized_end = game_end_msg.serialize();
 
-                network_server.sendPacket(player_white_fd, MessageType::GAME_END, serialized_end);
-                network_server.sendPacket(player_black_fd, MessageType::GAME_END, serialized_end);
+                network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
+                network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
 
                 // Remove game
                 removeGame(game_id);
@@ -453,6 +522,12 @@ public:
         cv.notify_one();
     }
 
+    /**
+     * Xử lý sự chấp nhận trận đấu từ client cho trò chơi được xác định bởi game_id.
+     *
+     * @param client_fd Định danh của khách hàng.
+     * @param game_id ID của trò chơi đang chờ.
+     */
     void handleAutoMatchAccepted(int client_fd, const std::string &game_id)
     {
         std::lock_guard<std::mutex> lock(games_mutex);
