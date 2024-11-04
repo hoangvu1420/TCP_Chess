@@ -18,6 +18,12 @@ class MessageHandler
 public:
     // Handle incoming messages ================================================================================
 
+    /**
+     * @brief Xử lý thông điệp dựa trên loại của gói tin.
+     *
+     * @param packet Gói tin chứa thông điệp cần xử lý.
+     * @return true nếu xử lý thành công, false nếu không xác định được loại thông điệp.
+     */
     bool handleMessage(const Packet &packet)
     {
         bool success = true;
