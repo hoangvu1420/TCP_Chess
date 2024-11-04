@@ -16,6 +16,9 @@ const std::string LABEL_COLOR = "\033[34m"; // Orange
 #define BLACK_SQUARE "\033[90m█\033[0m"
 #define SPACE " "
 
+/**
+ * @brief namespace chứa các hàm hỗ trợ hiển thị bàn cờ trong ứng dụng TCP_Chess.
+ */
 namespace board_display
 {
 
@@ -29,6 +32,21 @@ namespace board_display
         return piece.color() == chess::Color::BLACK;
     }
 
+    /**
+     * @brief In một dòng của bàn cờ với các thành phần và màu sắc được định dạng.
+     * 
+     * Giải thích cấu trúc:
+     * 
+     * - Một ô (cell): Mỗi ô trên bàn cờ được chia thành các phần nhỏ để hiển thị ký hiệu quân cờ và màu sắc. Mỗi ô có độ cao nhất định được chia thành các subLine để tạo độ sâu và định dạng cho việc hiển thị.
+     * 
+     * - Một dòng (line): Một dòng trên bàn cờ bao gồm nhiều ô, mỗi ô đại diện cho một vị trí cụ thể trên bàn cờ. Hàm `printLine` xử lý việc in từng dòng, bao gồm việc xác định vị trí quân cờ, áp dụng màu sắc phù hợp, và sắp xếp các ô theo thứ tự cần thiết (có thể lật bàn cờ nếu cần).
+     * 
+     * @param iLine Số thứ tự của dòng cần in.
+     * @param pchColor1 Màu sắc được áp dụng cho ô thứ nhất trong cặp ô.
+     * @param pchColor2 Màu sắc được áp dụng cho ô thứ hai trong cặp ô.
+     * @param board Bản đồ hiện tại của bàn cờ, chứa trạng thái các quân cờ.
+     * @param flip Cờ đánh dấu xem bàn cờ có được lật ngược không.
+     */
     void printLine(int iLine, const char *pchColor1, const char *pchColor2, const chess::Board &board, bool flip)
     {
         const int CELL = 6; // Number of characters per cell vertically
