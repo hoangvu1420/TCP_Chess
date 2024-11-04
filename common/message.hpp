@@ -17,7 +17,6 @@ Payload structure:
     - uint8_t username_length (1 byte)
     - char[username_length] username (username_length bytes)
 */
-
 struct RegisterMessage
 {
     std::string username;
@@ -54,7 +53,6 @@ Payload structure:
     - char[username_length] username (username_length bytes)
     - uint16_t elo (2 bytes)
 */
-
 struct RegisterSuccessMessage
 {
     std::string username;
@@ -95,7 +93,6 @@ Payload structure:
     - uint8_t error_message_length (1 byte)
     - char[error_message_length] error_message (error_message_length bytes)
 */
-
 struct RegisterFailureMessage
 {
     std::string error_message;
@@ -131,7 +128,6 @@ Payload structure:
     - uint8_t username_length (1 byte)
     - char[username_length] username (username_length bytes)
 */
-
 struct LoginMessage
 {
     std::string username;
@@ -168,7 +164,6 @@ Payload structure:
     - char[username_length] username (username_length bytes)
     - uint16_t elo (2 bytes)
 */
-
 struct LoginSuccessMessage
 {
     std::string username;
@@ -209,7 +204,6 @@ Payload structure:
     - uint8_t error_message_length (1 byte)
     - char[error_message_length] error_message (error_message_length bytes)
 */
-
 struct LoginFailureMessage
 {
     std::string error_message;
@@ -253,7 +247,6 @@ Payload structure:
     - uint8_t fen_length (1 byte)
     - char[fen_length] fen (fen_length bytes)
 */
-
 struct GameStartMessage
 {
     std::string game_id;
@@ -315,7 +308,6 @@ Payload structure:
     - uint8_t uci_move_length (1 byte)
     - char[uci_move_length] uci_move (uci_move_length bytes)
 */
-
 struct MoveMessage
 {
     std::string game_id;
@@ -359,7 +351,6 @@ Payload structure:
     - uint8_t error_message_length (1 byte)
     - char[error_message_length] error_message (error_message_length bytes)
 */
-
 struct MoveErrorMessage
 {
     std::string game_id;
@@ -412,7 +403,6 @@ Payload structure:
     - uint8_t message_length (1 byte)
     - char[message_length] message (message_length bytes)
 */
-
 struct GameStatusUpdateMessage
 {
     std::string game_id;
@@ -489,7 +479,6 @@ Payload structure:
 
     - uint16_t half_moves_count (2 bytes)
 */
-
 struct GameEndMessage
 {
     std::string game_id;
@@ -552,7 +541,6 @@ Payload structure:
     - uint8_t username_length (1 byte)
     - char[username_length] username (username_length bytes)
 */
-
 struct AutoMatchRequestMessage
 {
     std::string username;
@@ -591,7 +579,6 @@ Payload structure:
     - uint8_t game_id_length (1 byte)
     - char[game_id_length] game_id (game_id_length bytes)
 */
-
 struct AutoMatchFoundMessage
 {
     std::string opponent_username;
@@ -638,7 +625,6 @@ Payload structure:
     - uint8_t game_id_length (1 byte)
     - char[game_id_length] game_id (game_id_length bytes)
 */
-
 struct AutoMatchAcceptedMessage
 {
     std::string game_id;
@@ -674,7 +660,6 @@ Payload structure:
     - uint8_t game_id_length (1 byte)
     - char[game_id_length] game_id (game_id_length bytes)
 */
-
 struct AutoMatchDeclinedMessage
 {
     std::string game_id;
@@ -710,7 +695,6 @@ Payload structure:
     - uint8_t game_id_length (1 byte)
     - char[game_id_length] game_id (game_id_length bytes)
 */
-
 struct MatchDeclinedNotificationMessage
 {
     std::string game_id;
