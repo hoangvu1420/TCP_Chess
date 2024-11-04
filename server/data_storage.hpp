@@ -34,6 +34,19 @@ struct User
     }
 };
 
+/**
+ * @brief Lớp DataStorage là một Singleton quản lý dữ liệu người dùng trong ứng dụng TCP_Chess.
+ *
+ * Các chức năng chính:
+ * 
+ * - Đăng ký người dùng mới với tên và điểm ELO mặc định.
+ * 
+ * - Xác thực sự tồn tại của người dùng.
+ * 
+ * - Lấy và cập nhật điểm ELO của người dùng.
+ *
+ * @note Lớp này không thể sao chép hoặc gán để đảm bảo chỉ có một instance được tồn tại.
+ */
 class DataStorage
 {
 public:
@@ -48,6 +61,13 @@ public:
         delete &getInstance();
     }
 
+    /**
+     * Đăng ký một người dùng mới.
+     *
+     * @param username Tên người dùng cần đăng ký.
+     * @param elo Điểm Elo khởi tạo (mặc định: Const::DEFAULT_ELO).
+     * @return true nếu đăng ký thành công, false nếu tên người dùng đã tồn tại.
+     */
     bool registerUser(const std::string &username, const uint16_t elo = Const::DEFAULT_ELO)
     {
         std::lock_guard<std::mutex> lock(mtx);
@@ -68,6 +88,12 @@ public:
         return true;
     }
 
+    /**
+     * Kiểm tra tính hợp lệ của người dùng.
+     *
+     * @param username Tên người dùng cần xác thực.
+     * @return Trả về true nếu người dùng tồn tại, ngược lại trả về false.
+     */
     bool validateUser(const std::string &username)
     {
         std::lock_guard<std::mutex> lock(mtx);
