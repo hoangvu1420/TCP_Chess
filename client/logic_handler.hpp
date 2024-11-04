@@ -86,6 +86,9 @@ public:
         }
     }
 
+    /**
+     * Xử lý menu trò chơi, bao gồm gửi yêu cầu ghép trận tự động, chơi với máy, hoặc trở về menu chính.
+     */
     void handleGameMenu()
     {
         // UI::printLogo();
