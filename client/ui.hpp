@@ -18,6 +18,10 @@
 #define YELLOW "\033[33m" // Yellow
 #define BLUE "\033[34m" // Blue
 
+/**
+ * @namespace UI
+ * @brief Chứa các chức năng giao diện người dùng như hiển thị menu, thông báo và tương tác với người dùng.
+ */
 namespace UI
 {
     // Clear the console
