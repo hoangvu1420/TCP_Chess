@@ -29,6 +29,14 @@ private:
     std::unordered_map<int, ClientInfo> clients;
     std::mutex clients_mutex;
 
+    /**
+     * @brief Khởi tạo máy chủ với cổng được chỉ định.
+     *
+     * Tạo socket, thiết lập địa chỉ và cấu hình server để lắng nghe kết nối trên cổng đã cho.
+     * Nếu xảy ra lỗi trong quá trình thiết lập, chương trình sẽ kết thúc.
+     *
+     * @param port Cổng mà server sẽ lắng nghe kết nối.
+     */
     void initialize(uint16_t port)
     {
         server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -88,6 +96,11 @@ public:
         return instance;
     }
 
+    /**
+     * @brief Chấp nhận kết nối mới từ khách hàng.
+     *
+     * @return fd của client nếu thành công, -1 nếu thất bại.
+     */
     int acceptConnection()
     {
         sockaddr_in client_address;
@@ -105,6 +118,14 @@ public:
         return client_fd;
     }
 
+    /**
+     * Gửi một gói tin đến client.
+     *
+     * @param client_fd Định danh của client.
+     * @param messageType Loại thông điệp.
+     * @param payload Dữ liệu payload của gói tin.
+     * @return true nếu gửi thành công, false nếu thất bại.
+     */
     bool sendPacket(int client_fd, MessageType messageType, const std::vector<uint8_t> &payload)
     {
         uint8_t type = static_cast<uint8_t>(messageType);
@@ -125,6 +146,14 @@ public:
         return true;
     }
 
+    /**
+     * Gửi một gói tin đến người dùng bằng tên đăng nhập.
+     *
+     * @param username Tên đăng nhập của người dùng nhận gói tin.
+     * @param messageType Loại thông điệp cần gửi.
+     * @param payload Dữ liệu gói tin cần gửi.
+     * @return Trả về true nếu gửi thành công, ngược lại trả về false.
+     */
     bool sendPacketToUsername(const std::string &username, MessageType messageType, const std::vector<uint8_t> &payload)
     {
         std::lock_guard<std::mutex> lock(clients_mutex);
@@ -139,6 +168,13 @@ public:
         return false;
     }
 
+    /**
+     * @brief Nhận một gói tin từ client.
+     *
+     * @param client_fd Mô tả socket của client.
+     * @param packet Tham chiếu để chứa gói tin nhận được.
+     * @return true nếu nhận thành công, false nếu thất bại hoặc kết nối bị đóng.
+     */
     bool receivePacket(int client_fd, Packet &packet)
     {
         // Đọc dữ liệu từ client_fd mà không giữ khóa
