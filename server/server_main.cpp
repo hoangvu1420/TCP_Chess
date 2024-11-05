@@ -16,6 +16,7 @@ int main()
     // Khởi tạo NetworkServer
     NetworkServer &network_server = NetworkServer::getInstance();
 
+    // Tạo một vector chứa tất cả các thread xử lý client
     std::vector<std::thread> client_threads;
 
     while (true)
