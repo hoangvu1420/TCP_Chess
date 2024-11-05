@@ -200,7 +200,7 @@ public:
         session_data.setGameStatus(message.game_id, is_white, message.fen);
 
         // Bắt đầu trò chơi
-        handleGame();
+        handleMove();
     }
 
     void handleGameStatusUpdate(const GameStatusUpdateMessage &message)
@@ -224,12 +224,10 @@ public:
             return;
         }
 
-        handleGame();
+        handleMove();
     }
 
-private:
-
-    void handleGame()
+    void handleMove()
     {
         SessionData &session_data = SessionData::getInstance();
         NetworkClient &network_client = NetworkClient::getInstance();
@@ -258,6 +256,9 @@ private:
             UI::printInfoMessage("Đang chờ đối thủ ra nước đi...");
         }
     }
+
+private:
+
 }; // class LogicHandler
 
 #endif // LOGIC_HANDLER_HPP

@@ -54,6 +54,10 @@ public:
             // Handle game status update
             handleGameStatusUpdate(packet.payload);
             break;
+        case MessageType::INVALID_MOVE:
+            // Handle invalid move
+            handleInvalidMove(packet.payload);
+            break;
         case MessageType::GAME_END:
             // Handle game end
             handleGameEnd(packet.payload);
@@ -160,6 +164,18 @@ private:
         // Handle game status update
         LogicHandler logic_handler;
         logic_handler.handleGameStatusUpdate(message);
+    }
+
+    void handleInvalidMove(const std::vector<uint8_t> &payload)
+    {
+        InvalidMoveMessage message = InvalidMoveMessage::deserialize(payload);
+
+        UI::printErrorMessage("Nước đi không hợp lệ.");
+        std::cout << "Game_id: " << message.game_id << "\n"
+                  << "Error_message: " << message.error_message << std::endl;
+
+        LogicHandler logic_handler;
+        logic_handler.handleMove();
     }
 
     void handleGameEnd(const std::vector<uint8_t> &payload)
