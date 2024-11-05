@@ -463,6 +463,17 @@ public:
                 removeGame(game_id);
             }
         }
+        else
+        {
+            // Invalid move
+            NetworkServer &network_server = NetworkServer::getInstance();
+            InvalidMoveMessage invalid_move_msg;
+            invalid_move_msg.game_id = game_id;
+            invalid_move_msg.error_message = "Invalid move: " + uci_move;
+
+            std::vector<uint8_t> serialized = invalid_move_msg.serialize();
+            network_server.sendPacket(client_fd, MessageType::INVALID_MOVE, serialized);
+        }
     }
 
     bool isGameOver(const std::string &game_id)
