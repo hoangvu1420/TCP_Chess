@@ -341,7 +341,7 @@ struct MoveMessage
     }
 };
 
-// MoveErrorMessage ========================================================================================
+// InvalidMoveMessage ========================================================================================
 /*
 Send from server to client to notify that the move was invalid.
 
@@ -351,14 +351,14 @@ Payload structure:
     - uint8_t error_message_length (1 byte)
     - char[error_message_length] error_message (error_message_length bytes)
 */
-struct MoveErrorMessage
+struct InvalidMoveMessage
 {
     std::string game_id;
     std::string error_message;
 
     MessageType getType() const
     {
-        return MessageType::MOVE_ERROR;
+        return MessageType::INVALID_MOVE;
     }
 
     std::vector<uint8_t> serialize() const
@@ -371,9 +371,9 @@ struct MoveErrorMessage
         return payload;
     }
 
-    static MoveErrorMessage deserialize(const std::vector<uint8_t> &payload)
+    static InvalidMoveMessage deserialize(const std::vector<uint8_t> &payload)
     {
-        MoveErrorMessage message;
+        InvalidMoveMessage message;
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);

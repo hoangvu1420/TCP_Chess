@@ -28,7 +28,7 @@ enum class MessageType : uint8_t
     GAME_START = 0x30,
     TURN_NOTIFICATION = 0x31,
     MOVE = 0x32,
-    MOVE_ERROR = 0x33,
+    INVALID_MOVE = 0x33,
     GAME_STATUS_UPDATE = 0x34,
     GAME_END = 0x35,
 
