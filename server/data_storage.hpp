@@ -70,7 +70,7 @@ public:
      */
     bool registerUser(const std::string &username, const uint16_t elo = Const::DEFAULT_ELO)
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if (users.find(username) != users.end())
         {
@@ -96,14 +96,14 @@ public:
      */
     bool validateUser(const std::string &username)
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(mutex);
 
         return users.find(username) != users.end();
     }
 
     uint16_t getUserELO(const std::string &username)
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(mutex);
 
         auto it = users.find(username);
         if (it != users.end())
@@ -115,7 +115,7 @@ public:
 
     bool updateUserELO(const std::string &username, const uint16_t elo)
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(mutex);
 
         auto it = users.find(username);
         if (it != users.end())
@@ -129,7 +129,7 @@ public:
 
 private:
     std::unordered_map<std::string, User> users; // mapping username -> User
-    std::mutex mtx;
+    std::mutex mutex;
 
     DataStorage()
     {
