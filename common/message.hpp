@@ -9,7 +9,8 @@
 #include "utils.hpp"
 #include "protocol.hpp"
 
-// RegisterMessage ========================================================================================
+#pragma region RegisterMessage 
+// RegisterMessage 
 /*
 Send from client to server to register a new user.
 
@@ -43,8 +44,9 @@ struct RegisterMessage
         return message;
     }
 };
+#pragma endregion RegisterMessage
 
-// RegisterSuccessMessage =================================================================================
+#pragma region RegisterSuccessMessage 
 /*
 Send from server to client to notify that the registration was successful.
 
@@ -84,8 +86,9 @@ struct RegisterSuccessMessage
         return message;
     }
 };
+#pragma endregion RegisterSuccessMessage
 
-// RegisterFailureMessage =================================================================================
+#pragma region RegisterFailureMessage 
 /*
 Send from server to client to notify that the registration was unsuccessful.
 
@@ -119,8 +122,9 @@ struct RegisterFailureMessage
         return message;
     }
 };
+#pragma endregion RegisterFailureMessage
 
-// LoginMessage ============================================================================================
+#pragma region LoginMessage 
 /*
 Send from client to server to login.
 
@@ -154,8 +158,9 @@ struct LoginMessage
         return message;
     }
 };
+#pragma endregion LoginMessage
 
-// LoginSuccessMessage ======================================================================================
+#pragma region LoginSuccessMessage 
 /*
 Send from server to client to notify that the login was successful.
 
@@ -196,7 +201,7 @@ struct LoginSuccessMessage
     }
 };
 
-// LoginFailureMessage ========================================================================================
+#pragma region LoginFailureMessage 
 /*
 Send from server to client to notify that the login was unsuccessful.
 
@@ -230,8 +235,9 @@ struct LoginFailureMessage
         return message;
     }
 };
+#pragma endregion LoginFailureMessage
 
-// GameStartMessage ========================================================================================
+#pragma region GameStartMessage 
 /*
 Send from server to clients to notify that a new game has started.
 
@@ -297,8 +303,9 @@ struct GameStartMessage
         return message;
     }
 };
+#pragma endregion GameStartMessage
 
-// MoveMessage ====================================================================================================
+#pragma region MoveMessage 
 /*
 Send from client to server to make a move.
 
@@ -340,8 +347,9 @@ struct MoveMessage
         return message;
     }
 };
+#pragma endregion MoveMessage
 
-// InvalidMoveMessage ========================================================================================
+#pragma region InvalidMoveMessage 
 /*
 Send from server to client to notify that the move was invalid.
 
@@ -383,8 +391,9 @@ struct InvalidMoveMessage
         return message;
     }
 };
+#pragma endregion InvalidMoveMessage
 
-// GameStatusUpdateMessage ========================================================================================
+#pragma region GameStatusUpdateMessage 
 /*
 Send from server to clients to notify that the game status has been updated.
 
@@ -462,8 +471,9 @@ struct GameStatusUpdateMessage
         return message;
     }
 };
+#pragma endregion GameStatusUpdateMessage
 
-// GameEndMessage ========================================================================================
+#pragma region GameEndMessage 
 /*
 Send from server to clients to notify that the game has ended.
 
@@ -532,8 +542,9 @@ struct GameEndMessage
         return message;
     }
 };
+#pragma endregion GameEndMessage
 
-// AutoMatchRequestMessage ========================================================================================
+#pragma region AutoMatchRequestMessage 
 /*
 Send from client to server to request an auto match.
 
@@ -567,8 +578,9 @@ struct AutoMatchRequestMessage
         return message;
     }
 };
+#pragma endregion AutoMatchRequestMessage
 
-// AutoMatchFoundMessage ========================================================================================
+#pragma region AutoMatchFoundMessage 
 /*
 Send from server to clients to notify that an auto match has been found.
 
@@ -616,8 +628,9 @@ struct AutoMatchFoundMessage
         return message;
     }
 };
+#pragma endregion AutoMatchFoundMessage
 
-// AutoMatchAcceptedMessage ========================================================================================
+#pragma region AutoMatchAcceptedMessage =
 /*
 Send from client to server to accept an auto match.
 
@@ -651,8 +664,9 @@ struct AutoMatchAcceptedMessage
         return message;
     }
 };
+#pragma endregion AutoMatchAcceptedMessage
 
-// AutoMatchDeclinedMessage ========================================================================================
+#pragma region AutoMatchDeclinedMessage =
 /*
 Send from client to server to decline an auto match.
 
@@ -686,8 +700,9 @@ struct AutoMatchDeclinedMessage
         return message;
     }
 };
+#pragma endregion AutoMatchDeclinedMessage
 
-// MatchDeclinedNotificationMessage ========================================================================================
+#pragma region MatchDeclinedNotificationMessage 
 /*
 Send from server to client to notify that the opponent has declined the match.
 
@@ -721,5 +736,94 @@ struct MatchDeclinedNotificationMessage
         return message;
     }
 };
+#pragma endregion MatchDeclinedNotificationMessage
+
+#pragma region RequestPlayerListMessage 
+/*
+Send from client to server to request the list of players.
+
+Payload structure:
+    - No payload
+*/
+struct RequestPlayerListMessage
+{
+    MessageType getType() const
+    {
+        return MessageType::REQUEST_PLAYER_LIST;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        return {}; // No payload
+    }
+
+    static RequestPlayerListMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        // No payload to deserialize
+        return RequestPlayerListMessage();
+    }
+};
+#pragma endregion RequestPlayerListMessage
+
+#pragma region PlayerListMessage 
+/*
+Send from server to clients to provide the list of players.
+
+Payload structure:
+    - uint8_t number_of_players (1 byte)
+    - [Player 1][Player 2]...
+
+Player structure:
+    - uint8_t username_length (1 byte)
+    - char[username_length] username (username_length bytes)
+    - uint16_t elo (2 bytes)
+*/
+struct PlayerListMessage
+{
+    struct Player
+    {
+        std::string username;
+        uint16_t elo;
+    };
+
+    std::vector<Player> players;
+
+    MessageType getType() const
+    {
+        return MessageType::PLAYER_LIST;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+        payload.push_back(static_cast<uint8_t>(players.size()));
+        for (const auto &player : players)
+        {
+            payload.push_back(static_cast<uint8_t>(player.username.size()));
+            payload.insert(payload.end(), player.username.begin(), player.username.end());
+            std::vector<uint8_t> elo_bytes = to_big_endian_16(player.elo);
+            payload.insert(payload.end(), elo_bytes.begin(), elo_bytes.end());
+        }
+        return payload;
+    }
+
+    static PlayerListMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        PlayerListMessage message;
+        size_t pos = 0;
+        uint8_t number_of_players = payload[pos++];
+        for (uint8_t i = 0; i < number_of_players; ++i)
+        {
+            uint8_t username_length = payload[pos++];
+            std::string username(payload.begin() + pos, payload.begin() + pos + username_length);
+            pos += username_length;
+            uint16_t elo = from_big_endian_16(payload, pos);
+            pos += 2;
+            message.players.push_back({username, elo});
+        }
+        return message;
+    }
+};
+#pragma endregion PlayerListMessage
 
 #endif // MESSAGE_HPP
