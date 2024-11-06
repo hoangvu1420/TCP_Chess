@@ -206,9 +206,10 @@ public:
     void handleGameStatusUpdate(const GameStatusUpdateMessage &message)
     {
         UI::printInfoMessage("Trò chơi đã cập nhật.");
-        std::cout << "Game_id: " << message.game_id << "\n"
-                  << "FEN: " << message.fen << "\n"
-                  << "Current_turn_username: " << message.current_turn_username << std::endl;
+        std::cout << "Game_id: " << message.game_id << std::endl
+                  << "FEN: " << message.fen << std::endl
+                  << "Current_turn_username: " << message.current_turn_username << std::endl
+                  << "Is_game_over: " << static_cast<bool>(message.is_game_over) << std::endl;
 
         // Update session data
         SessionData &session_data = SessionData::getInstance();
@@ -218,7 +219,7 @@ public:
         session_data.setTurn(is_my_turn);
         session_data.setFen(message.fen);
 
-        if (message.is_game_over)
+        if (static_cast<bool>(message.is_game_over))
         {
             UI::showBoard(session_data.getFen(), !session_data.isWhite());
             return;
