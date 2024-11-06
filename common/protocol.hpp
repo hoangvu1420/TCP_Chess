@@ -61,8 +61,8 @@ struct Packet
     {
         std::vector<uint8_t> packet;
         packet.push_back(static_cast<uint8_t>(type));
-        std::vector<uint8_t> length_bytes = to_big_endian_16(length);
-        packet.insert(packet.end(), length_bytes.begin(), length_bytes.end());
+        packet.push_back(static_cast<uint8_t>((length >> 8) & 0xFF)); // High byte
+        packet.push_back(static_cast<uint8_t>(length & 0xFF));        // Low byte
         packet.insert(packet.end(), payload.begin(), payload.end());
         return packet;
     }
