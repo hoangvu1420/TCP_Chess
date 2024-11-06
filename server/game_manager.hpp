@@ -457,7 +457,7 @@ public:
                 std::vector<uint8_t> serialized_end = game_end_msg.serialize();
 
                 network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
-                network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
+                network_server.sendPacketToUsername(player_black_name, MessageType::GAME_END, serialized_end);
 
                 // Remove game
                 removeGame(game_id);
