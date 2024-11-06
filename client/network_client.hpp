@@ -107,7 +107,7 @@ public:
     }
 
     /**
-     * Gửi một gói tin tới máy chủ.
+     * Gửi một gói tin tới server.
      *
      * @param messageType Kiểu của thông điệp.
      * @param payload Dữ liệu của gói tin.
@@ -117,17 +117,15 @@ public:
     {
         std::lock_guard<std::mutex> lock(send_mutex);
 
-        uint8_t type = static_cast<uint8_t>(messageType);
-        uint16_t length = htons(static_cast<uint16_t>(payload.size())); // Chuyển đổi một lần
+        Packet packet;
+        packet.type = messageType;
+        packet.length = htons(static_cast<uint16_t>(payload.size()));
+        packet.payload = payload;
 
-        std::vector<uint8_t> packet;
-        packet.push_back(type);
-        packet.push_back(static_cast<uint8_t>((length >> 8) & 0xFF)); // Byte cao
-        packet.push_back(static_cast<uint8_t>(length & 0xFF));        // Byte thấp
-        packet.insert(packet.end(), payload.begin(), payload.end());
+        std::vector<uint8_t> serialized = packet.serialize();
 
-        ssize_t sent = send(socket_fd, packet.data(), packet.size(), 0);
-        if (sent != static_cast<ssize_t>(packet.size()))
+        ssize_t sent = send(socket_fd, serialized.data(), serialized.size(), 0);
+        if (sent != static_cast<ssize_t>(serialized.size()))
         {
             perror("send failed");
             return false;
@@ -160,7 +158,7 @@ public:
             // Kết nối đã đóng, dừng chương trình
             std::cerr << "Kết nối tới server đã đóng." << std::endl;
             SessionData::getInstance().setRunning(false);
-            return false; 
+            return false;
         }
 
         buffer.insert(buffer.end(), temp_buffer, temp_buffer + bytes_received);

@@ -128,17 +128,15 @@ public:
      */
     bool sendPacket(int client_fd, MessageType messageType, const std::vector<uint8_t> &payload)
     {
-        uint8_t type = static_cast<uint8_t>(messageType);
-        uint16_t length = htons(static_cast<uint16_t>(payload.size())); // Chuyển đổi một lần
-
-        std::vector<uint8_t> packet;
-        packet.push_back(type);
-        packet.push_back(static_cast<uint8_t>((length >> 8) & 0xFF)); // Byte cao
-        packet.push_back(static_cast<uint8_t>(length & 0xFF));        // Byte thấp
-        packet.insert(packet.end(), payload.begin(), payload.end());
-
-        ssize_t sent = send(client_fd, packet.data(), packet.size(), 0);
-        if (sent != static_cast<ssize_t>(packet.size()))
+        Packet packet;
+        packet.type = messageType;
+        packet.length = htons(static_cast<uint16_t>(payload.size()));
+        packet.payload = payload;
+    
+        std::vector<uint8_t> serialized = packet.serialize();
+    
+        ssize_t sent = send(client_fd, serialized.data(), serialized.size(), 0);
+        if (sent != static_cast<ssize_t>(serialized.size()))
         {
             perror("send failed");
             return false;
