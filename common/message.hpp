@@ -30,17 +30,21 @@ struct RegisterMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(username.size()));
         payload.insert(payload.end(), username.begin(), username.end());
+
         return payload;
     }
 
     static RegisterMessage deserialize(const std::vector<uint8_t> &payload)
     {
         RegisterMessage message;
+
         size_t pos = 0;
         uint8_t username_length = payload[pos++];
         message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
         return message;
     }
 };
@@ -68,21 +72,27 @@ struct RegisterSuccessMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(username.size()));
         payload.insert(payload.end(), username.begin(), username.end());
+
         std::vector<uint8_t> elo_bytes = to_big_endian_16(elo);
         payload.insert(payload.end(), elo_bytes.begin(), elo_bytes.end());
+
         return payload;
     }
 
     static RegisterSuccessMessage deserialize(const std::vector<uint8_t> &payload)
     {
         RegisterSuccessMessage message;
+
         size_t pos = 0;
         uint8_t username_length = payload[pos++];
         message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
         pos += username_length;
         message.elo = from_big_endian_16(payload, pos);
+
         return message;
     }
 };
@@ -108,17 +118,21 @@ struct RegisterFailureMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(error_message.size()));
         payload.insert(payload.end(), error_message.begin(), error_message.end());
+
         return payload;
     }
 
     static RegisterFailureMessage deserialize(const std::vector<uint8_t> &payload)
     {
         RegisterFailureMessage message;
+
         size_t pos = 0;
         uint8_t error_message_length = payload[pos++];
         message.error_message = std::string(payload.begin() + pos, payload.begin() + pos + error_message_length);
+
         return message;
     }
 };
@@ -144,17 +158,21 @@ struct LoginMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(username.size()));
         payload.insert(payload.end(), username.begin(), username.end());
+
         return payload;
     }
 
     static LoginMessage deserialize(const std::vector<uint8_t> &payload)
     {
         LoginMessage message;
+
         size_t pos = 0;
         uint8_t username_length = payload[pos++];
         message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
         return message;
     }
 };
@@ -184,6 +202,7 @@ struct LoginSuccessMessage
         std::vector<uint8_t> payload;
         payload.push_back(static_cast<uint8_t>(username.size()));
         payload.insert(payload.end(), username.begin(), username.end());
+
         std::vector<uint8_t> elo_bytes = to_big_endian_16(elo);
         payload.insert(payload.end(), elo_bytes.begin(), elo_bytes.end());
         return payload;
@@ -192,11 +211,14 @@ struct LoginSuccessMessage
     static LoginSuccessMessage deserialize(const std::vector<uint8_t> &payload)
     {
         LoginSuccessMessage message;
+
         size_t pos = 0;
         uint8_t username_length = payload[pos++];
         message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
         pos += username_length;
         message.elo = from_big_endian_16(payload, pos);
+
         return message;
     }
 };
@@ -221,17 +243,21 @@ struct LoginFailureMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(error_message.size()));
         payload.insert(payload.end(), error_message.begin(), error_message.end());
+
         return payload;
     }
 
     static LoginFailureMessage deserialize(const std::vector<uint8_t> &payload)
     {
         LoginFailureMessage message;
+
         size_t pos = 0;
         uint8_t error_message_length = payload[pos++];
         message.error_message = std::string(payload.begin() + pos, payload.begin() + pos + error_message_length);
+
         return message;
     }
 };
@@ -269,37 +295,49 @@ struct GameStartMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         payload.push_back(static_cast<uint8_t>(player1_username.size()));
         payload.insert(payload.end(), player1_username.begin(), player1_username.end());
+
         payload.push_back(static_cast<uint8_t>(player2_username.size()));
         payload.insert(payload.end(), player2_username.begin(), player2_username.end());
+
         payload.push_back(static_cast<uint8_t>(starting_player_username.size()));
         payload.insert(payload.end(), starting_player_username.begin(), starting_player_username.end());
+
         payload.push_back(static_cast<uint8_t>(fen.size()));
         payload.insert(payload.end(), fen.begin(), fen.end());
+
         return payload;
     }
 
     static GameStartMessage deserialize(const std::vector<uint8_t> &payload)
     {
         GameStartMessage message;
+
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         pos += game_id_length;
         uint8_t player1_username_length = payload[pos++];
         message.player1_username = std::string(payload.begin() + pos, payload.begin() + pos + player1_username_length);
+
         pos += player1_username_length;
         uint8_t player2_username_length = payload[pos++];
         message.player2_username = std::string(payload.begin() + pos, payload.begin() + pos + player2_username_length);
+
         pos += player2_username_length;
         uint8_t starting_player_username_length = payload[pos++];
         message.starting_player_username = std::string(payload.begin() + pos, payload.begin() + pos + starting_player_username_length);
+
         pos += starting_player_username_length;
         uint8_t fen_length = payload[pos++];
         message.fen = std::string(payload.begin() + pos, payload.begin() + pos + fen_length);
+
         return message;
     }
 };
@@ -328,22 +366,28 @@ struct MoveMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         payload.push_back(static_cast<uint8_t>(uci_move.size()));
         payload.insert(payload.end(), uci_move.begin(), uci_move.end());
+
         return payload;
     }
 
     static MoveMessage deserialize(const std::vector<uint8_t> &payload)
     {
         MoveMessage message;
+
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         pos += game_id_length;
         uint8_t uci_move_length = payload[pos++];
         message.uci_move = std::string(payload.begin() + pos, payload.begin() + pos + uci_move_length);
+
         return message;
     }
 };
@@ -372,22 +416,28 @@ struct InvalidMoveMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         payload.push_back(static_cast<uint8_t>(error_message.size()));
         payload.insert(payload.end(), error_message.begin(), error_message.end());
+
         return payload;
     }
 
     static InvalidMoveMessage deserialize(const std::vector<uint8_t> &payload)
     {
         InvalidMoveMessage message;
+
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         pos += game_id_length;
         uint8_t error_message_length = payload[pos++];
         message.error_message = std::string(payload.begin() + pos, payload.begin() + pos + error_message_length);
+
         return message;
     }
 };
@@ -564,17 +614,21 @@ struct AutoMatchRequestMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(username.size()));
         payload.insert(payload.end(), username.begin(), username.end());
+
         return payload;
     }
 
     static AutoMatchRequestMessage deserialize(const std::vector<uint8_t> &payload)
     {
         AutoMatchRequestMessage message;
+
         size_t pos = 0;
         uint8_t username_length = payload[pos++];
         message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
         return message;
     }
 };
@@ -605,26 +659,34 @@ struct AutoMatchFoundMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(opponent_username.size()));
         payload.insert(payload.end(), opponent_username.begin(), opponent_username.end());
+
         std::vector<uint8_t> elo_bytes = to_big_endian_16(opponent_elo);
         payload.insert(payload.end(), elo_bytes.begin(), elo_bytes.end());
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         return payload;
     }
 
     static AutoMatchFoundMessage deserialize(const std::vector<uint8_t> &payload)
     {
         AutoMatchFoundMessage message;
+
         size_t pos = 0;
         uint8_t opponent_username_length = payload[pos++];
         message.opponent_username = std::string(payload.begin() + pos, payload.begin() + pos + opponent_username_length);
+
         pos += opponent_username_length;
         message.opponent_elo = from_big_endian_16(payload, pos);
+
         pos += 2;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         return message;
     }
 };
@@ -650,17 +712,21 @@ struct AutoMatchAcceptedMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         return payload;
     }
 
     static AutoMatchAcceptedMessage deserialize(const std::vector<uint8_t> &payload)
     {
         AutoMatchAcceptedMessage message;
+
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         return message;
     }
 };
@@ -686,17 +752,21 @@ struct AutoMatchDeclinedMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         return payload;
     }
 
     static AutoMatchDeclinedMessage deserialize(const std::vector<uint8_t> &payload)
     {
         AutoMatchDeclinedMessage message;
+
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         return message;
     }
 };
@@ -722,17 +792,21 @@ struct MatchDeclinedNotificationMessage
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> payload;
+
         payload.push_back(static_cast<uint8_t>(game_id.size()));
         payload.insert(payload.end(), game_id.begin(), game_id.end());
+
         return payload;
     }
 
     static MatchDeclinedNotificationMessage deserialize(const std::vector<uint8_t> &payload)
     {
         MatchDeclinedNotificationMessage message;
+
         size_t pos = 0;
         uint8_t game_id_length = payload[pos++];
         message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
         return message;
     }
 };
@@ -797,30 +871,38 @@ struct PlayerListMessage
     {
         std::vector<uint8_t> payload;
         payload.push_back(static_cast<uint8_t>(players.size()));
+
         for (const auto &player : players)
         {
             payload.push_back(static_cast<uint8_t>(player.username.size()));
             payload.insert(payload.end(), player.username.begin(), player.username.end());
+
             std::vector<uint8_t> elo_bytes = to_big_endian_16(player.elo);
             payload.insert(payload.end(), elo_bytes.begin(), elo_bytes.end());
         }
+
         return payload;
     }
 
     static PlayerListMessage deserialize(const std::vector<uint8_t> &payload)
     {
         PlayerListMessage message;
+
         size_t pos = 0;
         uint8_t number_of_players = payload[pos++];
+
         for (uint8_t i = 0; i < number_of_players; ++i)
         {
             uint8_t username_length = payload[pos++];
             std::string username(payload.begin() + pos, payload.begin() + pos + username_length);
+
             pos += username_length;
             uint16_t elo = from_big_endian_16(payload, pos);
+
             pos += 2;
             message.players.push_back({username, elo});
         }
+        
         return message;
     }
 };

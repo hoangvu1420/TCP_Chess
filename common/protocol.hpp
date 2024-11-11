@@ -24,17 +24,25 @@ enum class MessageType : uint8_t
     LOGIN_SUCCESS = 0x21,
     LOGIN_FAILURE = 0x22,
 
-    // Game
-    GAME_START = 0x30,
-    TURN_NOTIFICATION = 0x31,
-    MOVE = 0x32,
-    INVALID_MOVE = 0x33,
-    GAME_STATUS_UPDATE = 0x34,
-    GAME_END = 0x35,
-
     // Player list
-    REQUEST_PLAYER_LIST = 0x40,
-    PLAYER_LIST = 0x41,
+    REQUEST_PLAYER_LIST = 0x30,
+    PLAYER_LIST = 0x31,
+
+    // Game
+    GAME_START = 0x40,
+    MOVE = 0x41,
+    INVALID_MOVE = 0x42,
+    GAME_STATUS_UPDATE = 0x43,
+    GAME_END = 0x44,
+    RESIGN = 0x45,
+    DRAW_REQUEST = 0x46,
+    DRAW_NOTIFICATION = 0x47,
+    DRAW_RESPONSE = 0x48,
+    DRAW_DECLINED = 0x49,
+    REMATCH_REQUEST = 0x4A,
+    REMATCH_NOTIFICATION = 0x4B,
+    REMATCH_RESPONSE = 0x4C,
+    REMATCH_DECLINED = 0x4D,
 
     // Challenge
     CHALLENGE_REQUEST = 0x50,
