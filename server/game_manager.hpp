@@ -1,4 +1,3 @@
-// game_manager.hpp
 #ifndef GAME_MANAGER_HPP
 #define GAME_MANAGER_HPP
 
@@ -20,9 +19,9 @@
 /**
  * @class Game
  * @brief Quản lý trạng thái và logic của một ván cờ.
- * 
- * Lớp này bao gồm các thông tin về người chơi, trạng thái bàn cờ, 
- * lượt chơi hiện tại, và các phương thức để thực hiện nước đi, 
+ *
+ * Lớp này bao gồm các thông tin về người chơi, trạng thái bàn cờ,
+ * lượt chơi hiện tại, và các phương thức để thực hiện nước đi,
  * kiểm tra trạng thái kết thúc của trò chơi, và các thông tin liên quan khác.
  */
 class Game
@@ -189,23 +188,23 @@ struct PendingGame
 /**
  * @class GameManager
  * @brief Quản lý các ván cờ và hệ thống ghép trận.
- * 
- * Lớp này chịu trách nhiệm quản lý các ván cờ đang diễn ra, 
- * xử lý các yêu cầu di chuyển, và ghép trận cho người chơi. 
+ *
+ * Lớp này chịu trách nhiệm quản lý các ván cờ đang diễn ra,
+ * xử lý các yêu cầu di chuyển, và ghép trận cho người chơi.
  * Sử dụng Singleton pattern để đảm bảo chỉ có một instance duy nhất.
- * 
+ *
  * Các chức năng chính bao gồm:
- * 
+ *
  * - Tạo và quản lý các ván cờ.
- * 
+ *
  * - Xử lý các yêu cầu di chuyển từ người chơi.
- * 
+ *
  * - Ghép trận tự động dựa trên ELO của người chơi.
- * 
+ *
  * - Gửi thông báo về trạng thái trò chơi và kết quả trận đấu cho người chơi.
- * 
+ *
  * - Quản lý hàng đợi ghép trận và xử lý các yêu cầu chấp nhận hoặc từ chối ghép trận.
- * 
+ *
  */
 class GameManager
 {
@@ -226,21 +225,21 @@ private:
 
     /**
      * @brief Vòng lặp quản lý tìm kiếm trận đấu.
-     * 
+     *
      * Hàm này liên tục kiểm tra hàng đợi tìm kiếm để ghép cặp người chơi.
-     * 
+     *
      * - Chờ đợi đến khi có ít nhất 2 người chơi trong hàng đợi hoặc khi nhận được tín hiệu dừng.
-     * 
+     *
      * - Nếu nhận được tín hiệu dừng, dừng vòng lặp.
-     * 
+     *
      * - Khi có đủ hai người chơi, lấy hai người từ hàng đợi và kiểm tra sự khác biệt ELO.
-     * 
+     *
      *   - 1. Nếu sự khác biệt ELO nhỏ hơn hoặc bằng ngưỡng cho phép, tạo trận đấu mới và gửi thông báo cho cả hai người chơi.
-     * 
+     *
      *   - 2. Nếu không, đưa lại hai người chơi vào hàng đợi.
-     * 
+     *
      * - Sleep 1 giây trước khi lặp lại vòng lặp.
-     * 
+     *
      * @note Hàm này chạy trong một luồng riêng và sử dụng mutex cùng điều kiện biến để quản lý truy cập vào hàng đợi tìm kiếm.
      */
     void matchmakingLoop()
@@ -324,6 +323,21 @@ private:
         return false;
     }
 
+    std::shared_ptr<Game> getGameByClientFd(int client_fd)
+    {
+        std::string username = NetworkServer::getInstance().getUsername(client_fd);
+
+        for (const auto &game_pair : games)
+        {
+            std::shared_ptr<Game> game = game_pair.second;
+            if (game->player_white_name == username || game->player_black_name == username)
+            {
+                return game;
+            }
+        }
+        return nullptr;
+    }
+
 public:
     // Delete copy constructor and assignment operator
     GameManager(const GameManager &) = delete;
@@ -399,13 +413,13 @@ public:
      * @param uci_move Nước đi được mô tả theo định dạng UCI.
      *
      * Hàm này thực hiện các bước sau:
-     * 
+     *
      * 1. Thực hiện nước đi và kiểm tra tính hợp lệ.
-     * 
+     *
      * 2. Cập nhật trạng thái trò chơi và gửi thông báo cập nhật trạng thái đến cả hai người chơi.
-     * 
+     *
      * 3. Kiểm tra xem trò chơi đã kết thúc chưa, nếu có thì gửi thông báo kết thúc trò chơi và loại bỏ trò chơi khỏi hệ thống.
-     * 
+     *
      */
     void handleMove(int client_fd, const std::string &game_id, const std::string &uci_move)
     {
@@ -473,6 +487,39 @@ public:
 
             std::vector<uint8_t> serialized = invalid_move_msg.serialize();
             network_server.sendPacket(client_fd, MessageType::INVALID_MOVE, serialized);
+        }
+    }
+
+    void stopGameForClient(int client_fd)
+    {
+        NetworkServer &network_server = NetworkServer::getInstance();
+        std::string username = network_server.getUsername(client_fd);
+        std::shared_ptr<Game> game = getGameByClientFd(client_fd);
+
+        if (game != nullptr)
+        {
+            std::string game_id = game->game_id;
+            std::string opponent_name;
+
+            if (game->player_white_name == username)
+            {
+                opponent_name = game->player_black_name;
+            }
+            else if (game->player_black_name == username)
+            {
+                opponent_name = game->player_white_name;
+            }
+
+            // Send GameResultMessage to the opponent
+            GameEndMessage game_end_msg;
+            game_end_msg.game_id = game_id;
+            game_end_msg.winner_username = opponent_name;
+            game_end_msg.reason = "Opponent disconnected";
+            game_end_msg.half_moves_count = game->half_moves_count;
+            network_server.sendPacketToUsername(opponent_name, MessageType::GAME_END, game_end_msg.serialize());
+
+            // Remove the game from the system
+            removeGame(game_id);
         }
     }
 

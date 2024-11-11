@@ -55,6 +55,9 @@ void handleClient(int client_fd)
         if (!received)
         {
             std::cout << "Client " << client_fd << " ngắt kết nối." << std::endl;
+            GameManager &game_manager = GameManager::getInstance();
+            game_manager.stopGameForClient(client_fd);
+
             network_server.closeConnection(client_fd);
             break;
         }
