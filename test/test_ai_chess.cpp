@@ -19,23 +19,62 @@
 // Constants
 const int MAX_DEPTH = 4;
 
+std::string getResultReason(chess::GameResultReason reason)
+{
+    switch (reason)
+    {
+    case chess::GameResultReason::CHECKMATE:
+        return "checkmate";
+    case chess::GameResultReason::STALEMATE:
+        return "stalemate";
+    case chess::GameResultReason::INSUFFICIENT_MATERIAL:
+        return "insufficient material";
+    case chess::GameResultReason::FIFTY_MOVE_RULE:
+        return "fifty move rule";
+    case chess::GameResultReason::THREEFOLD_REPETITION:
+        return "threefold repetition";
+    default:
+        return "";
+    }
+}
+
 int main()
 {
     std::srand(static_cast<unsigned>(std::time(0)));
+
     const char *initFen = chess::constants::STARTPOS;
     chess::Board board(initFen);
-    chess::GameResult result = chess::GameResult::NONE;
-    chess::GameResultReason reason = chess::GameResultReason::NONE;
     chess::Color current_turn = board.sideToMove();
     bool isWhiteTurn = (current_turn == chess::Color::WHITE);
 
     // AI màu đen
     chess::Color aiColor = chess::Color::BLACK;
 
-    while (result == chess::GameResult::NONE)
+    while (true)
     {
         std::cout << std::endl;
         board_display::printBoard(board.getFen(), isWhiteTurn);
+
+        // Check if the game is over
+        auto gameStatus = board.isGameOver();
+        if (gameStatus.second != chess::GameResult::NONE)
+        {
+            std::cout << "Game Over: ";
+            switch (gameStatus.second)
+            {
+            case chess::GameResult::LOSE:
+                std::cout << (isWhiteTurn ? "Black" : "White") << " wins! Due to " << getResultReason(gameStatus.first) << std::endl;
+                break;
+            case chess::GameResult::DRAW:
+                std::cout << "Draw! Due to " << getResultReason(gameStatus.first) << std::endl;
+                break;
+            default:
+                std::cout << "None" << std::endl;
+                break;
+            }
+            std::cout << std::endl;
+            break;
+        }
 
         chess::Move move;
         if (isWhiteTurn)
@@ -59,24 +98,7 @@ int main()
         }
 
         board.makeMove(move);
-        std::tie(reason, result) = board.isGameOver();
         isWhiteTurn = !isWhiteTurn;
-    }
-
-    board_display::printBoard(board.getFen(), isWhiteTurn);
-
-    std::cout << "Game over! Result: ";
-    switch (result)
-    {
-    case chess::GameResult::LOSE:
-        std::cout << (isWhiteTurn ? "Black" : "White") << " wins! Due to " << static_cast<int>(reason) << std::endl;
-        break;
-    case chess::GameResult::DRAW:
-        std::cout << "Draw! Due to " << static_cast<int>(reason) << std::endl;
-        break;
-    default:
-        std::cout << "None" << std::endl;
-        break;
     }
 
     return 0;
