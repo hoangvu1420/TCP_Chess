@@ -293,28 +293,6 @@ private:
         20, 20, 0, 0, 0, 0, 20, 20,
         20, 30, 10, 0, 0, 10, 30, 20};
 
-    // Helper function to get piece value
-    int getPieceValue(chess::PieceType type)
-    {
-        switch (type.internal())
-        {
-        case chess::PieceType::PAWN:
-            return PAWN_VALUE;
-        case chess::PieceType::KNIGHT:
-            return KNIGHT_VALUE;
-        case chess::PieceType::BISHOP:
-            return BISHOP_VALUE;
-        case chess::PieceType::ROOK:
-            return ROOK_VALUE;
-        case chess::PieceType::QUEEN:
-            return QUEEN_VALUE;
-        case chess::PieceType::KING:
-            return KING_VALUE;
-        default:
-            return 0;
-        }
-    }
-
     // Evaluation Function
     int evaluate(const chess::Board &board)
     {
@@ -370,6 +348,57 @@ private:
         return score;
     }
 
+    // Helper function to get piece value
+    int getPieceValue(chess::PieceType type)
+    {
+        switch (type.internal())
+        {
+        case chess::PieceType::PAWN:
+            return PAWN_VALUE;
+        case chess::PieceType::KNIGHT:
+            return KNIGHT_VALUE;
+        case chess::PieceType::BISHOP:
+            return BISHOP_VALUE;
+        case chess::PieceType::ROOK:
+            return ROOK_VALUE;
+        case chess::PieceType::QUEEN:
+            return QUEEN_VALUE;
+        case chess::PieceType::KING:
+            return KING_VALUE;
+        default:
+            return 0;
+        }
+    }
+
+    // Function to compare moves using MVV-LVA ordering
+    bool mvvLvaComparator(const chess::Move &a, const chess::Move &b, const chess::Board &board) {
+        chess::Piece capturedA = board.at<chess::Piece>(a.to());
+        chess::Piece capturedB = board.at<chess::Piece>(b.to());
+        
+        // Check if both moves are captures
+        bool isCaptureA = capturedA != chess::Piece::NONE;
+        bool isCaptureB = capturedB != chess::Piece::NONE;
+        
+        if (isCaptureA && isCaptureB) {
+            int valueA = getPieceValue(capturedA.type());
+            int valueB = getPieceValue(capturedB.type());
+            // Sort by higher victim value first
+            if (valueA != valueB)
+                return valueA > valueB;
+            
+            // If victim values are equal, sort by lower aggressor value first
+            chess::Piece movingPieceA = board.at<chess::Piece>(a.from());
+            chess::Piece movingPieceB = board.at<chess::Piece>(b.from());
+            return getPieceValue(movingPieceA.type()) < getPieceValue(movingPieceB.type());
+        }
+        
+        // Prioritize captures over non-captures
+        if (isCaptureA != isCaptureB)
+            return isCaptureA;
+        
+        return false; // If neither are captures, maintain current order
+    }
+
     int count = 0;
 
     // Minimax with Alpha-Beta Pruning
@@ -394,44 +423,10 @@ private:
                 return 0;
         }
 
-        // MVV-LVA Comparator
-        auto mvvLvaComparator = [&](const chess::Move &a, const chess::Move &b) -> bool {
-            chess::Piece capturedA = board.at<chess::Piece>(a.to());
-            chess::Piece capturedB = board.at<chess::Piece>(b.to());
-            
-            // Check if both moves are captures
-            bool isCaptureA = capturedA != chess::Piece::NONE;
-            bool isCaptureB = capturedB != chess::Piece::NONE;
-            
-            if (isCaptureA && isCaptureB) {
-                int valueA = getPieceValue(capturedA.type());
-                int valueB = getPieceValue(capturedB.type());
-                // Sort by higher victim value first
-                if (valueA != valueB)
-                    return valueA > valueB;
-                
-                // If victim values are equal, sort by lower aggressor value first
-                chess::Piece movingPieceA = board.at<chess::Piece>(a.from());
-                chess::Piece movingPieceB = board.at<chess::Piece>(b.from());
-                return getPieceValue(movingPieceA.type()) < getPieceValue(movingPieceB.type());
-            }
-            
-            // Prioritize captures over non-captures
-            if (isCaptureA != isCaptureB)
-                return isCaptureA;
-            
-            return false; // If neither are captures, maintain current order
-        };
-
         // Apply MVV-LVA Comparator
-        std::sort(moves.begin(), moves.end(), mvvLvaComparator);
-
-        // // Move Ordering: Prioritize captures
-        // std::sort(moves.begin(), moves.end(), [&](const chess::Move &a, const chess::Move &b) -> bool {
-        //     chess::Piece capturedA = board.at<chess::Piece>(a.to());
-        //     chess::Piece capturedB = board.at<chess::Piece>(b.to());
-        //     return getPieceValue(capturedA.type()) > getPieceValue(capturedB.type()); 
-        // });
+        std::sort(moves.begin(), moves.end(), [&](const chess::Move &a, const chess::Move &b) -> bool {
+            return mvvLvaComparator(a, b, board);
+        });
 
         if (maximizingPlayer)
         {
@@ -485,6 +480,10 @@ private:
 
         chess::Movelist moves;
         chess::movegen::legalmoves(moves, board);
+        // Apply MVV-LVA Comparator
+        std::sort(moves.begin(), moves.end(), [&](const chess::Move &a, const chess::Move &b) -> bool {
+            return mvvLvaComparator(a, b, board);
+        });
         int bestValue;
 
         if (aiColor == chess::Color::WHITE)
