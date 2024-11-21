@@ -33,7 +33,6 @@ public:
     std::string current_turn;
 
     std::string winner;
-    uint16_t half_moves_count;
 
     Game(const std::string &id,
          const std::string &p1,
@@ -43,8 +42,7 @@ public:
                                    player_black_name(p2),
                                    board(fen),
                                    is_over(false),
-                                   winner(""),
-                                   half_moves_count(0)
+                                   winner("")
     {
         chess::Color current_turn_color = board.sideToMove();
         bool isWhiteTurn = current_turn_color == chess::Color::WHITE;
@@ -58,8 +56,6 @@ public:
             return false;
 
         board.makeMove(move);
-
-        half_moves_count++;
 
         // Kiểm tra kết quả trò chơi
         std::tie(reason, result) = board.isGameOver();
@@ -92,6 +88,11 @@ public:
 
         // Check if the king's square is attacked by the opponent
         return board.isAttacked(king, opponent);
+    }
+
+    int getHalfMovesCount()
+    {
+        return board.halfMoveClock();
     }
 
     bool isGameOver()
@@ -515,7 +516,7 @@ public:
             game_end_msg.game_id = game_id;
             game_end_msg.winner_username = opponent_name;
             game_end_msg.reason = "Opponent disconnected";
-            game_end_msg.half_moves_count = game->half_moves_count;
+            game_end_msg.half_moves_count = game->getHalfMovesCount();
             network_server.sendPacketToUsername(opponent_name, MessageType::GAME_END, game_end_msg.serialize());
 
             // Remove the game from the system
@@ -567,7 +568,7 @@ public:
     {
         auto game = getGame(game_id);
         if (game)
-            return game->half_moves_count;
+            return game->getHalfMovesCount();
         return 0;
     }
 

@@ -229,7 +229,8 @@ private:
     const int BISHOP_VALUE = 330;
     const int ROOK_VALUE = 500;
     const int QUEEN_VALUE = 900;
-    const int KING_VALUE = 100000;
+    const int KING_VALUE = 0;
+    const int CHECKMATE_VALUE = 100000;
 
     // Piece-Square Tables
     const int pawnTable[64] = {
@@ -292,6 +293,28 @@ private:
         20, 20, 0, 0, 0, 0, 20, 20,
         20, 30, 10, 0, 0, 10, 30, 20};
 
+    // Helper function to get piece value
+    int getPieceValue(chess::PieceType type)
+    {
+        switch (type.internal())
+        {
+        case chess::PieceType::PAWN:
+            return PAWN_VALUE;
+        case chess::PieceType::KNIGHT:
+            return KNIGHT_VALUE;
+        case chess::PieceType::BISHOP:
+            return BISHOP_VALUE;
+        case chess::PieceType::ROOK:
+            return ROOK_VALUE;
+        case chess::PieceType::QUEEN:
+            return QUEEN_VALUE;
+        case chess::PieceType::KING:
+            return KING_VALUE;
+        default:
+            return 0;
+        }
+    }
+
     // Evaluation Function
     int evaluate(const chess::Board &board)
     {
@@ -347,9 +370,13 @@ private:
         return score;
     }
 
+    int count = 0;
+
     // Minimax with Alpha-Beta Pruning
-    int minimax(chess::Board &board, int depth, int alpha, int beta, bool maximizingPlayer)
+    int minimax(chess::Board &board, int depth, int alpha, int beta, bool maximizingPlayer, chess::Color aiColor)
     {
+        count++;
+
         if (depth == 0)
         {
             return evaluate(board);
@@ -362,10 +389,49 @@ private:
         {
             auto [reason, result] = board.isGameOver();
             if (result == chess::GameResult::LOSE)
-                return maximizingPlayer ? -KING_VALUE : KING_VALUE;
+                return maximizingPlayer ? -CHECKMATE_VALUE : CHECKMATE_VALUE;
             else
                 return 0;
         }
+
+        // MVV-LVA Comparator
+        auto mvvLvaComparator = [&](const chess::Move &a, const chess::Move &b) -> bool {
+            chess::Piece capturedA = board.at<chess::Piece>(a.to());
+            chess::Piece capturedB = board.at<chess::Piece>(b.to());
+            
+            // Check if both moves are captures
+            bool isCaptureA = capturedA != chess::Piece::NONE;
+            bool isCaptureB = capturedB != chess::Piece::NONE;
+            
+            if (isCaptureA && isCaptureB) {
+                int valueA = getPieceValue(capturedA.type());
+                int valueB = getPieceValue(capturedB.type());
+                // Sort by higher victim value first
+                if (valueA != valueB)
+                    return valueA > valueB;
+                
+                // If victim values are equal, sort by lower aggressor value first
+                chess::Piece movingPieceA = board.at<chess::Piece>(a.from());
+                chess::Piece movingPieceB = board.at<chess::Piece>(b.from());
+                return getPieceValue(movingPieceA.type()) < getPieceValue(movingPieceB.type());
+            }
+            
+            // Prioritize captures over non-captures
+            if (isCaptureA != isCaptureB)
+                return isCaptureA;
+            
+            return false; // If neither are captures, maintain current order
+        };
+
+        // Apply MVV-LVA Comparator
+        std::sort(moves.begin(), moves.end(), mvvLvaComparator);
+
+        // // Move Ordering: Prioritize captures
+        // std::sort(moves.begin(), moves.end(), [&](const chess::Move &a, const chess::Move &b) -> bool {
+        //     chess::Piece capturedA = board.at<chess::Piece>(a.to());
+        //     chess::Piece capturedB = board.at<chess::Piece>(b.to());
+        //     return getPieceValue(capturedA.type()) > getPieceValue(capturedB.type()); 
+        // });
 
         if (maximizingPlayer)
         {
@@ -373,7 +439,7 @@ private:
             for (auto &move : moves)
             {
                 board.makeMove(move);
-                int eval = minimax(board, depth - 1, alpha, beta, false);
+                int eval = minimax(board, depth - 1, alpha, beta, false, aiColor);
                 board.unmakeMove(move);
                 maxEval = std::max(maxEval, eval);
                 alpha = std::max(alpha, eval);
@@ -388,7 +454,7 @@ private:
             for (auto &move : moves)
             {
                 board.makeMove(move);
-                int eval = minimax(board, depth - 1, alpha, beta, true);
+                int eval = minimax(board, depth - 1, alpha, beta, true, aiColor);
                 board.unmakeMove(move);
                 minEval = std::min(minEval, eval);
                 beta = std::min(beta, eval);
@@ -401,6 +467,7 @@ private:
 
     chess::Move findBestMoveInternal(const std::string &fen, int depth, chess::Color aiColor)
     {
+        count = 0;
         chess::Board board(fen);
 
         // Initialize the OpeningBookManager with the path to Book.txt
@@ -426,7 +493,7 @@ private:
             for (auto &move : moves)
             {
                 board.makeMove(move);
-                int boardValue = minimax(board, depth - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), false);
+                int boardValue = minimax(board, depth - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), false, aiColor);
                 board.unmakeMove(move);
                 if (boardValue > bestValue)
                 {
@@ -441,7 +508,7 @@ private:
             for (auto &move : moves)
             {
                 board.makeMove(move);
-                int boardValue = minimax(board, depth - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true);
+                int boardValue = minimax(board, depth - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true, aiColor);
                 board.unmakeMove(move);
                 if (boardValue < bestValue)
                 {
@@ -451,6 +518,7 @@ private:
             }
         }
 
+        std::cout << "Nodes evaluated: " << count << std::endl;
         std::cout << "Best move value: " << std::abs(bestValue) << std::endl;
         return bestMove;
     }

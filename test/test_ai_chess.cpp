@@ -72,6 +72,7 @@ int main()
                 std::cout << "None" << std::endl;
                 break;
             }
+            std::cout << "Final position: " << board.getFen() << std::endl;
             std::cout << std::endl;
             break;
         }
@@ -85,10 +86,12 @@ int main()
                 break;
             move = moves[std::rand() % moves.size()];
             std::cout << "White plays: " << chess::uci::moveToUci(move) << std::endl;
+            std::cout << "Press Enter to continue...";
+            std::cin.ignore();
         }
         else
         {
-            move = ChessBot::getInstance().findBestMove(board.getFen(), aiColor);
+            move = ChessBot::getInstance().findBestMove(board.getFen(), aiColor, 4);
             if (move == chess::Move::NO_MOVE)
             {
                 std::cout << "Black (AI) has no legal moves." << std::endl;
