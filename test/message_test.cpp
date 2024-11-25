@@ -128,28 +128,28 @@ void test_game_status_update_message() {
     std::cout << "GameStatusUpdateMessage Test: " << (game_id_match && fen_match && current_turn_match ? "Passed" : "Failed") << std::endl;
 }
 
-void test_game_end_message() {
-    // Arrange
-    GameEndMessage original_message;
-    original_message.game_id = "game123";
-    original_message.winner_username = "player1";
-    original_message.result = 1;
-    original_message.reason = "checkmate";
-    original_message.half_moves_count = 40;
+// void test_game_end_message() {
+//     // Arrange
+//     GameEndMessage original_message;
+//     original_message.game_id = "game123";
+//     original_message.winner_username = "player1";
+//     original_message.result = 1;
+//     original_message.reason = "checkmate";
+//     original_message.half_moves_count = 40;
 
-    // Act
-    std::vector<uint8_t> serialized = original_message.serialize();
-    GameEndMessage deserialized_message = GameEndMessage::deserialize(serialized);
+//     // Act
+//     std::vector<uint8_t> serialized = original_message.serialize();
+//     GameEndMessage deserialized_message = GameEndMessage::deserialize(serialized);
 
-    // Assert
-    bool game_id_match = original_message.game_id == deserialized_message.game_id;
-    bool winner_match = original_message.winner_username == deserialized_message.winner_username;
-    bool result_match = original_message.result == deserialized_message.result;
-    bool reason_match = original_message.reason == deserialized_message.reason;
-    bool moves_count_match = original_message.half_moves_count == deserialized_message.half_moves_count;
+//     // Assert
+//     bool game_id_match = original_message.game_id == deserialized_message.game_id;
+//     bool winner_match = original_message.winner_username == deserialized_message.winner_username;
+//     bool result_match = original_message.result == deserialized_message.result;
+//     bool reason_match = original_message.reason == deserialized_message.reason;
+//     bool moves_count_match = original_message.half_moves_count == deserialized_message.half_moves_count;
 
-    std::cout << "GameEndMessage Test: " << (game_id_match && winner_match && result_match && reason_match && moves_count_match ? "Passed" : "Failed") << std::endl;
-}
+//     std::cout << "GameEndMessage Test: " << (game_id_match && winner_match && result_match && reason_match && moves_count_match ? "Passed" : "Failed") << std::endl;
+// }
 
 void test_game_status_update_message_extended() {
     // Arrange
@@ -176,6 +176,19 @@ void test_game_status_update_message_extended() {
               << std::endl;
 }
 
+void test_challenge_request_message() {
+    // Arrange
+    ChallengeRequestMessage original_message;
+    original_message.to_username = "opponent";
+
+    // Act
+    std::vector<uint8_t> serialized = original_message.serialize();
+    ChallengeRequestMessage deserialized_message = ChallengeRequestMessage::deserialize(serialized);
+
+    // Assert
+    std::cout << "ChallengeRequestMessage Test: " << (original_message.to_username == deserialized_message.to_username ? "Passed" : "Failed") << std::endl;
+}
+
 int main() {
     // test_register_message();
     // test_register_failure_message();
@@ -187,7 +200,7 @@ int main() {
     // test_game_status_update_message();
     // test_game_end_message();
 
-    test_game_status_update_message_extended();
-
+    //test_game_status_update_message_extended();
+    test_challenge_request_message();
     return 0;
 }

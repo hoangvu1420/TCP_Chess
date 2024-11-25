@@ -127,6 +127,12 @@ public:
         return false;
     }
 
+    std::unordered_map<std::string, User> getPlayerList()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return users;
+    }
+
 private:
     std::unordered_map<std::string, User> users; // mapping username -> User
     std::mutex mutex;

@@ -73,6 +73,12 @@ public:
             break;
 
         // Add additional cases for other MessageTypes
+
+        case MessageType::PLAYER_LIST:
+            // Handle player list received from server
+            handlePlayerList(packet.payload);
+            break;
+
         default:
             // Handle unknown message type
             handleUnknown(packet.payload);
@@ -205,6 +211,22 @@ private:
         std::cout << "Game_id: " << message.game_id << std::endl;
 
         LogicHandler logic_handler;
+        logic_handler.handleGameMenu();
+    }
+
+    void handlePlayerList(const std::vector<uint8_t> &payload)
+    {
+        PlayerListMessage message = PlayerListMessage::deserialize(payload);
+
+        for (const auto &player : message.players)
+        {
+            std::cout << "Username: " << player.username << "\n"
+                        << "ELO: " << player.elo << std::endl;
+        }
+
+        LogicHandler logic_handler;
+
+        logic_handler.handleChallenge();
         logic_handler.handleGameMenu();
     }
 
