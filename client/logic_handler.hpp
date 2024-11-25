@@ -116,8 +116,18 @@ public:
             }
             else if (choice == 2)
             {
-                // Chơi với máy
-                UI::printErrorMessage("Chức năng này đang nấu.");
+                // // Chơi với máy
+                // UI::printErrorMessage("Chức năng này đang nấu.");
+                
+                // Xem danh sách người chơi trực tuyến
+
+                RequestPlayerListMessage request_player_list_msg;
+                if (!network_client.sendPacket(request_player_list_msg.getType(), request_player_list_msg.serialize())) {
+                    UI::printErrorMessage("Tải danh sách người chơi trực tuyến thất bại.");
+                    break;
+                }
+                UI::printInfoMessage("Danh sách người chơi trực tuyến:");
+                break;
             }
             else if (choice == 3)
             {
@@ -255,6 +265,28 @@ public:
         {
             // Lượt của đối thủ
             UI::printInfoMessage("Đang chờ đối thủ ra nước đi...");
+        }
+    }
+
+    void handleChallenge() {
+        // Thách đấu người chơi khác
+        // In UI
+        std::string opponent = UI::displayChallengeMenu();
+
+        // Nếu người dùng chọn quay lại
+        if (opponent == "NO_USERNAME_PROVIDED")
+            return;
+
+        // Nếu người dùng không chọn quay lại và nhập username
+        ChallengeRequestMessage challenge_request_msg;
+
+        challenge_request_msg.to_username = opponent;
+        
+        NetworkClient &network_client = NetworkClient::getInstance();
+
+        if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
+        {
+            UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
         }
     }
 

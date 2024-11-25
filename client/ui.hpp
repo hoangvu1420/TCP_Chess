@@ -107,7 +107,7 @@ namespace UI
         std::cout << "\n=========Game menu=========" << std::endl;
         std::cout << "Chọn hành động: " << std::endl;
         std::cout << "  1. Ghép trận tự động" << std::endl;
-        std::cout << "  2. Chơi với máy" << std::endl;
+        std::cout << "  2. Danh sách người chơi trực tuyến" << std::endl;
         std::cout << "  3. Trở về" << std::endl;
 
         int choice;
@@ -142,6 +142,26 @@ namespace UI
         std::cout << "Nhập nước đi (VD: e2e4): " << std::flush;
         std::cin >> move;
         return move;
+    }
+
+    // Display "challenge other players" menu
+    std::string displayChallengeMenu() {
+        std::cout << "\n===== Thách đấu người chơi khác =====" << std::endl;
+        std::cout << "1. Thách đấu người chơi khác" << std::endl;
+        std::cout << "2. Quay lại" << std::endl;
+
+        int choice;
+        std::cout << "> " << std::flush;
+        std::cin >> choice;
+
+        if (choice == 1) {
+            std::string username;
+            std::cout << "Nhập username: " << std::flush;
+            std::cin >> username;
+            return username;
+        } else {
+            return "NO_USERNAME_PROVIDED";
+        }
     }
 
 

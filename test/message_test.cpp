@@ -176,6 +176,19 @@ void test_game_status_update_message_extended() {
               << std::endl;
 }
 
+
+void test_challenge_request_message() {
+    // Arrange
+    ChallengeRequestMessage original_message;
+    original_message.to_username = "opponent";
+
+    // Act
+    std::vector<uint8_t> serialized = original_message.serialize();
+    ChallengeRequestMessage deserialized_message = ChallengeRequestMessage::deserialize(serialized);
+
+    // Assert
+    std::cout << "ChallengeRequestMessage Test: " << (original_message.to_username == deserialized_message.to_username ? "Passed" : "Failed") << std::endl;
+}
 void test_player_list_message() {
     // Arrange
     PlayerListMessage original_message;
@@ -216,9 +229,9 @@ int main() {
     // test_game_status_update_message();
     // test_game_end_message();
 
+    test_challenge_request_message();
     // test_game_status_update_message_extended();
 
-    test_player_list_message();
-
+    // test_player_list_message();
     return 0;
 }
