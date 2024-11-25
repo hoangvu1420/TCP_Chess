@@ -190,7 +190,7 @@ private:
         std::cout << "[REQUEST_PLAYER_LIST]" << std::endl;
 
         DataStorage &storage = DataStorage::getInstance();
-        std::unordered_map<std::string, User> players = storage.getPlayerList();
+        std::unordered_map<std::string, UserModel> players = storage.getPlayerList();
 
         PlayerListMessage response;
 

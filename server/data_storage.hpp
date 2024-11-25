@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <mutex>
+#include <chrono>
 
 #include "../libraries/json.hpp"
 #include "../common/json_handler.hpp"
@@ -11,7 +12,7 @@
 
 using json = nlohmann::json;
 
-struct User
+struct UserModel
 {
     std::string username;
     uint16_t elo;
@@ -24,13 +25,82 @@ struct User
         };
     }
 
-    static User deserialize(std::string username, const json &j)
+    static UserModel deserialize(const std::string &username, const json &j)
     {
-        return User
+        return UserModel
         {
             username,
             j.at("elo").get<uint16_t>()
         };
+    }
+};
+
+struct GameModel
+{
+    std::string game_id;
+    std::string white_username;
+    std::string black_username;
+    std::string start_fen;
+    std::chrono::time_point<std::chrono::steady_clock> start_time;
+
+    struct Move
+    {
+        std::string uci_move;
+        std::string fen;
+        std::chrono::time_point<std::chrono::steady_clock> move_time;
+    };
+
+    std::vector<Move> moves;
+    std::string result;
+    std::string reason;
+
+    json serialize() const
+    {
+        json j;
+        j["white_username"] = white_username;
+        j["black_username"] = black_username;
+        j["start_fen"] = start_fen;
+        j["start_time"] = start_time.time_since_epoch().count();
+
+        json moves_json;
+        for (const auto &move : moves)
+        {
+            json move_json;
+            move_json["uci_move"] = move.uci_move;
+            move_json["fen"] = move.fen;
+            move_json["move_time"] = move.move_time.time_since_epoch().count();
+            moves_json.push_back(move_json);
+        }
+        j["moves"] = moves_json;
+
+        j["result"] = result;
+        j["reason"] = reason;
+
+        return j;
+    }
+
+    static GameModel deserialize(const std::string &game_id, const json &j)
+    {
+        GameModel game;
+        game.game_id = game_id;
+        game.white_username = j.at("white_username").get<std::string>();
+        game.black_username = j.at("black_username").get<std::string>();
+        game.start_fen = j.at("start_fen").get<std::string>();
+        game.start_time = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::nanoseconds(j.at("start_time").get<int64_t>()));
+
+        for (const auto &move_json : j.at("moves"))
+        {
+            GameModel::Move move;
+            move.uci_move = move_json.at("uci_move").get<std::string>();
+            move.fen = move_json.at("fen").get<std::string>();
+            move.move_time = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::nanoseconds(move_json.at("move_time").get<int64_t>()));
+            game.moves.push_back(move);
+        }
+
+        game.result = j.at("result").get<std::string>();
+        game.reason = j.at("reason").get<std::string>();
+
+        return game;
     }
 };
 
@@ -77,7 +147,7 @@ public:
             return false; // Username đã tồn tại
         }
 
-        users[username] = User
+        users[username] = UserModel
         {
             username, 
             elo 
@@ -127,14 +197,14 @@ public:
         return false;
     }
 
-    std::unordered_map<std::string, User> getPlayerList()
+    std::unordered_map<std::string, UserModel> getPlayerList()
     {
         std::lock_guard<std::mutex> lock(mutex);
         return users;
     }
 
 private:
-    std::unordered_map<std::string, User> users; // mapping username -> User
+    std::unordered_map<std::string, UserModel> users; // mapping username -> User
     std::mutex mutex;
 
     DataStorage()
@@ -145,7 +215,7 @@ private:
         {
             std::string username = it.key();
             uint16_t elo = it.value()["elo"];
-            users[username] = User::deserialize(username, it.value());
+            users[username] = UserModel::deserialize(username, it.value());
         }
     }
 
