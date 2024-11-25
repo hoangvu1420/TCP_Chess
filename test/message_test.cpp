@@ -176,6 +176,7 @@ void test_game_status_update_message_extended() {
               << std::endl;
 }
 
+
 void test_challenge_request_message() {
     // Arrange
     ChallengeRequestMessage original_message;
@@ -187,6 +188,34 @@ void test_challenge_request_message() {
 
     // Assert
     std::cout << "ChallengeRequestMessage Test: " << (original_message.to_username == deserialized_message.to_username ? "Passed" : "Failed") << std::endl;
+}
+void test_player_list_message() {
+    // Arrange
+    PlayerListMessage original_message;
+    original_message.players = {
+        {"player1", 1500},
+        {"player2", 1600},
+        {"player3", 1700}
+    };
+
+    // Act
+    std::vector<uint8_t> serialized = original_message.serialize();
+    PlayerListMessage deserialized_message = PlayerListMessage::deserialize(serialized);
+
+    // Assert
+    bool number_of_players_match = original_message.players.size() == deserialized_message.players.size();
+    bool players_match = true;
+    for (size_t i = 0; i < original_message.players.size(); ++i) {
+        if (original_message.players[i].username != deserialized_message.players[i].username ||
+            original_message.players[i].elo != deserialized_message.players[i].elo) {
+            players_match = false;
+            break;
+        }
+    }
+
+    std::cout << "PlayerListMessage Test: " 
+              << (number_of_players_match && players_match ? "Passed" : "Failed") 
+              << std::endl;
 }
 
 int main() {
@@ -200,7 +229,9 @@ int main() {
     // test_game_status_update_message();
     // test_game_end_message();
 
-    //test_game_status_update_message_extended();
     test_challenge_request_message();
+    // test_game_status_update_message_extended();
+
+    // test_player_list_message();
     return 0;
 }

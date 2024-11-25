@@ -9,7 +9,7 @@
                 "-g",
                 "${workspaceFolder}/server/server_main.cpp",
                 "-o",
-                "${workspaceFolder}/server/server",
+                "${workspaceFolder}/build/server_main",
                 "-lpthread"
             ],
             "group": "build",
@@ -25,10 +25,23 @@
                 "-g",
                 "${workspaceFolder}/client/client_main.cpp",
                 "-o",
-                "${workspaceFolder}/client/client",
+                "${workspaceFolder}/build/client_main",
                 "-lpthread"
             ],
             "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make",
+            "args": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": [
                 "$gcc"
             ]
