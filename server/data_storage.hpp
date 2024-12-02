@@ -35,7 +35,7 @@ struct UserModel
     }
 };
 
-struct GameModel
+struct MatchModel
 {
     std::string game_id;
     std::string white_username;
@@ -79,9 +79,9 @@ struct GameModel
         return j;
     }
 
-    static GameModel deserialize(const std::string &game_id, const json &j)
+    static MatchModel deserialize(const std::string &game_id, const json &j)
     {
-        GameModel game;
+        MatchModel game;
         game.game_id = game_id;
         game.white_username = j.at("white_username").get<std::string>();
         game.black_username = j.at("black_username").get<std::string>();
@@ -90,7 +90,7 @@ struct GameModel
 
         for (const auto &move_json : j.at("moves"))
         {
-            GameModel::Move move;
+            MatchModel::Move move;
             move.uci_move = move_json.at("uci_move").get<std::string>();
             move.fen = move_json.at("fen").get<std::string>();
             move.move_time = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::nanoseconds(move_json.at("move_time").get<int64_t>()));
@@ -108,11 +108,11 @@ struct GameModel
  * @brief Lớp DataStorage là một Singleton quản lý dữ liệu người dùng trong ứng dụng TCP_Chess.
  *
  * Các chức năng chính:
- * 
+ *
  * - Đăng ký người dùng mới với tên và điểm ELO mặc định.
- * 
+ *
  * - Xác thực sự tồn tại của người dùng.
- * 
+ *
  * - Lấy và cập nhật điểm ELO của người dùng.
  *
  * @note Lớp này không thể sao chép hoặc gán để đảm bảo chỉ có một instance được tồn tại.
@@ -126,11 +126,6 @@ public:
         return instance;
     }
 
-    void dispose()
-    {
-        delete &getInstance();
-    }
-
     /**
      * Đăng ký một người dùng mới.
      *
@@ -140,7 +135,7 @@ public:
      */
     bool registerUser(const std::string &username, const uint16_t elo = Const::DEFAULT_ELO)
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(users_mutex);
 
         if (users.find(username) != users.end())
         {
@@ -166,14 +161,14 @@ public:
      */
     bool validateUser(const std::string &username)
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(users_mutex);
 
         return users.find(username) != users.end();
     }
 
     uint16_t getUserELO(const std::string &username)
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(users_mutex);
 
         auto it = users.find(username);
         if (it != users.end())
@@ -185,7 +180,7 @@ public:
 
     bool updateUserELO(const std::string &username, const uint16_t elo)
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(users_mutex);
 
         auto it = users.find(username);
         if (it != users.end())
@@ -199,27 +194,39 @@ public:
 
     std::unordered_map<std::string, UserModel> getPlayerList()
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::mutex> lock(users_mutex);
         return users;
     }
 
 private:
     std::unordered_map<std::string, UserModel> users; // mapping username -> User
-    std::mutex mutex;
+    std::mutex users_mutex;
+
+    std::unordered_map<std::string, MatchModel> matches; // mapping game_id -> Match
+    std::mutex matches_mutex;
+
+    ~DataStorage() = default;
+    DataStorage(const DataStorage &) = delete;
+    DataStorage &operator=(const DataStorage &) = delete;
 
     DataStorage()
     {
         // Tải dữ liệu từ users.json
-        json j = JSONHandler::readJSON("../data/users.json");
-        for (auto it = j.begin(); it != j.end(); ++it)
+        json users_j = JSONHandler::readJSON("../data/users.json");
+        for (auto it = users_j.begin(); it != users_j.end(); ++it)
         {
             std::string username = it.key();
-            uint16_t elo = it.value()["elo"];
             users[username] = UserModel::deserialize(username, it.value());
         }
-    }
 
-    ~DataStorage() = default;
+        // Tải dữ liệu từ matches.json
+        json matches_j = JSONHandler::readJSON("../data/matches.json");
+        for (auto it = matches_j.begin(); it != matches_j.end(); ++it)
+        {
+            std::string game_id = it.key();
+            matches[game_id] = MatchModel::deserialize(game_id, it.value());
+        }
+    }
 
     bool saveUsersData()
     {
@@ -232,8 +239,16 @@ private:
         return true;
     }
 
-    DataStorage(const DataStorage &) = delete;
-    DataStorage &operator=(const DataStorage &) = delete;
+    bool saveMatchesData()
+    {
+        json j;
+        for (const auto &[game_id, match] : matches)
+        {
+            j[game_id] = match.serialize();
+        }
+        JSONHandler::writeJSON("../data/matches.json", j);
+        return true;
+    }
 };
 
 #endif // DATA_STORAGE_HPP
