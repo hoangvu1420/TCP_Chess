@@ -982,4 +982,92 @@ struct ChallengeNotificationMessage
 };
 #pragma endregion ChallengeNotificationMessage
 
+#pragma region ChallengeResponseMessage
+struct ChallengeResponseMessage
+{
+    std::string from_username;
+    uint8_t response;
+
+    MessageType getType() const
+    {
+        return MessageType::CHALLENGE_RESPONSE;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        // Serialize from_username
+        payload.push_back(static_cast<uint8_t>(from_username.size()));
+        payload.insert(payload.end(), from_username.begin(), from_username.end());
+
+        // Serialize response
+        payload.push_back(response);
+
+        return payload;
+    }
+
+    static ChallengeResponseMessage deserialize(const std::vector<uint8_t>& payload)
+    {
+        ChallengeResponseMessage message;
+        size_t pos = 0;
+
+        // Deserialize from_username
+        uint8_t from_username_length = payload[pos++];
+        message.from_username = std::string(payload.begin() + pos, payload.begin() + pos + from_username_length);
+        pos += from_username_length;
+
+        // Deserialize response
+        message.response = payload[pos++];
+
+        return message;
+    }
+};
+#pragma endregion ChallengeResponseMessage
+
+#pragma region ChallengeAcceptedMessage
+struct ChallengeAcceptedMessage
+{
+    std::string from_username;
+    std::string game_id;
+
+    MessageType getType() const
+    {
+        return MessageType::CHALLENGE_ACCEPTED;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        // Serialize from_username
+        payload.push_back(static_cast<uint8_t>(from_username.size()));
+        payload.insert(payload.end(), from_username.begin(), from_username.end());
+
+        // Serialize game_id
+        payload.push_back(static_cast<uint8_t>(game_id.size()));
+        payload.insert(payload.end(), game_id.begin(), game_id.end());
+
+        return payload;
+    }
+
+    static ChallengeAcceptedMessage deserialize(const std::vector<uint8_t>& payload)
+    {
+        ChallengeAcceptedMessage message;
+        size_t pos = 0;
+
+        // Deserialize from_username
+        uint8_t from_username_length = payload[pos++];
+        message.from_username = std::string(payload.begin() + pos, payload.begin() + pos + from_username_length);
+        pos += from_username_length;
+
+        // Deserialize game_id
+        uint8_t game_id_length = payload[pos++];
+        message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
+        return message;
+    }
+};
+#pragma endregion ChallengeAcceptedMessage
+
 #endif // MESSAGE_HPP
