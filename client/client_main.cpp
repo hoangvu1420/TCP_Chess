@@ -6,54 +6,40 @@
 #include "network_client.hpp"
 #include "message_handler.hpp"
 #include "logic_handler.hpp"
+#include "input_handler.hpp"
 
-int main()
-{
-    NetworkClient& network_client = NetworkClient::getInstance();
-    SessionData& session_data = SessionData::getInstance();
-
+int main() {
+    NetworkClient &network_client = NetworkClient::getInstance();
+    SessionData &session_data = SessionData::getInstance();
     session_data.setRunning(true);
 
-    // Thread để nhận thông điệp từ server
-    std::thread receiverThread([&]()
-    {
-        MessageHandler handler;
+    // Start input thread
+    std::atomic<bool> running{true};
+    InputHandler::startInputThread(running);
 
-        while (session_data.getRunning()) {
-            Packet packet;
-            bool received = network_client.receivePacket(packet);
-            if (received)
-            {
-                bool isSuccess = handler.handleMessage(packet);
-
-                if (!isSuccess) 
-                {
-                    std::cout << "Xử lý thông điệp thất bại." << std::endl;
-                    session_data.setRunning(false);
-                }
-            }
-            else
-            {
-                if (!session_data.getRunning())
-                {
-                    // Nếu running = false thì thoát
-                    break;
-                }
-                // Ngược lại, có thể tiếp tục đợi dữ liệu
-            }
-        } 
-    });
-
-    // Thread để nhập liệu từ người dùng
-    std::thread senderThread([&]()
-    {
+    // Initial menu handling in a separate thread
+    std::thread menu_thread([&]() {
+        session_data.setCurrentHandler(std::this_thread::get_id());
         LogicHandler logic_handler;
         logic_handler.handleInitialMenu();
     });
+    menu_thread.detach();
 
-    senderThread.join();
-    receiverThread.join();
+    MessageHandler handler;
+
+    while (session_data.getRunning()) {
+        Packet packet;
+        bool received = network_client.receivePacket(packet);
+        if (received) {
+            bool isSuccess = handler.pushMessage(packet);
+            if (!isSuccess) {
+                std::cout << "Xử lý thông điệp thất bại." << std::endl;
+                session_data.setRunning(false);
+            }
+        }
+    }
+
+    running = false; // Stop input thread
     std::cout << "Client đã đóng kết nối." << std::endl;
-
     return 0;
 }
