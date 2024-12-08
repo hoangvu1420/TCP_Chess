@@ -16,6 +16,8 @@
 #include "network_client.hpp"
 #include "ui.hpp"
 
+class MessageHandler;
+
 class LogicHandler
 {
 public:
@@ -46,7 +48,26 @@ public:
 
         while (true)
         {
-            int choice = UI::displayInitialMenu();
+            std::string result = UI::displayInitialMenu();
+
+            // if the input was cancelled
+            if (session_data.shouldStop())
+            {
+                std::cout << "shouldStop..." << std::endl;
+                break;
+            }
+
+            int choice;
+            try
+            {
+                choice = std::stoi(result);
+            }
+            catch (const std::exception &e)
+            {
+                UI::printErrorMessage("Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                continue;
+            }
+
             if (choice == 1)
             {
                 std::string username = UI::displayRegister();
@@ -91,14 +112,31 @@ public:
      */
     void handleGameMenu()
     {
-        // UI::printLogo();
-
         NetworkClient &network_client = NetworkClient::getInstance();
         SessionData &session_data = SessionData::getInstance();
 
         while (true)
         {
-            int choice = UI::displayGameMenu();
+            std::string result = UI::displayGameMenu();
+
+            // if result is empty, it means the input was cancelled
+            if (session_data.shouldStop())
+            {
+                std::cout << "shouldStop..." << std::endl;
+                break;
+            }
+
+            int choice;
+            try
+            {
+                choice = std::stoi(result);
+            }
+            catch (const std::exception &e)
+            {
+                UI::printErrorMessage("Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                continue;
+            }
+
             if (choice == 1)
             {
                 // Gửi yêu cầu tìm đối thủ
@@ -116,13 +154,10 @@ public:
             }
             else if (choice == 2)
             {
-                // // Chơi với máy
-                // UI::printErrorMessage("Chức năng này đang nấu.");
-                
                 // Xem danh sách người chơi trực tuyến
-
                 RequestPlayerListMessage request_player_list_msg;
-                if (!network_client.sendPacket(request_player_list_msg.getType(), request_player_list_msg.serialize())) {
+                if (!network_client.sendPacket(request_player_list_msg.getType(), request_player_list_msg.serialize()))
+                {
                     UI::printErrorMessage("Tải danh sách người chơi trực tuyến thất bại.");
                     break;
                 }
@@ -153,7 +188,26 @@ public:
 
         while (true)
         {
-            int choice = UI::displayAutoMatchOptions();
+            std::string result = UI::displayAutoMatchOptions();
+
+            // if the input was cancelled
+            if (SessionData::getInstance().shouldStop())
+            {
+                std::cout << "shouldStop..." << std::endl;
+                break;
+            }
+
+            int choice;
+            try
+            {
+                choice = std::stoi(result);
+            }
+            catch (const std::exception &e)
+            {
+                UI::printErrorMessage("Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                continue;
+            }
+
             if (choice == 1)
             {
                 // Chấp nhận
@@ -248,7 +302,16 @@ public:
         if (session_data.isMyTurn())
         {
             // Lượt của người chơi
-            std::string uci_move = UI::getMove();
+            std::string result = UI::getMove();
+
+            // Nếu người dùng không nhập nước đi
+            if (session_data.shouldStop())
+            {
+                std::cout << "shouldStop..." << std::endl;
+                return;
+            }
+
+            std::string uci_move = result;
 
             // Gửi nước đi
             MoveMessage move_msg;
@@ -268,25 +331,103 @@ public:
         }
     }
 
-    void handleChallenge() {
+    void handleChallenge()
+    {
         // Thách đấu người chơi khác
-        // In UI
         std::string opponent = UI::displayChallengeMenu();
 
         // Nếu người dùng chọn quay lại
-        if (opponent == "NO_USERNAME_PROVIDED")
+        if (opponent == "<NO_USERNAME_PROVIDED>")
             return;
 
         // Nếu người dùng không chọn quay lại và nhập username
         ChallengeRequestMessage challenge_request_msg;
 
         challenge_request_msg.to_username = opponent;
-        
+
         NetworkClient &network_client = NetworkClient::getInstance();
 
         if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
         {
             UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
+        }
+        else
+        {
+            UI::printInfoMessage("Đã gửi yêu cầu thách đấu. Đang chờ phản hồi...");
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+            UI::printInfoMessage("Hết thời gian chờ đợi.");
+        }
+    }
+
+    void handleChallengeDecision()
+    {
+        NetworkClient &network_client = NetworkClient::getInstance();
+
+        while (true)
+        {
+            std::string result = UI::displayChallengeDecision();
+
+            // if the input was cancelled
+            if (SessionData::getInstance().shouldStop())
+            {
+                std::cout << "shouldStop..." << std::endl;
+                break;
+            }
+
+            int choice;
+
+            if (result == "<TIMEOUT>")
+            {
+                UI::printErrorMessage("Hết thời gian chờ đợi. Tự động từ chối thách đấu.");
+                choice = 2;
+            }
+            else
+            {
+                try
+                {
+                    choice = std::stoi(result);
+                }
+                catch (const std::exception &e)
+                {
+                    UI::printErrorMessage("Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                    continue;
+                }
+            }
+
+            if (choice == 1)
+            {
+                // Chấp nhận
+                // ChallengeAcceptedMessage challenge_accepted_msg;
+
+                // if (!network_client.sendPacket(challenge_accepted_msg.getType(), challenge_accepted_msg.serialize()))
+                // {
+                //     UI::printErrorMessage("Gửi yêu cầu chấp nhận thách đấu thất bại.");
+                //     break;
+                // }
+
+                UI::printInfoMessage("Đã chấp nhận thách đấu.");
+                break;
+            }
+            else if (choice == 2)
+            {
+                // Từ chối
+                // ChallengeDeclinedMessage challenge_declined_msg;
+
+                // if (!network_client.sendPacket(challenge_declined_msg.getType(), challenge_declined_msg.serialize()))
+                // {
+                //     UI::printErrorMessage("Gửi yêu cầu từ chối thách đấu thất bại.");
+                //     break;
+                // }
+
+                UI::printInfoMessage("Đã từ chối thách đấu.");
+                handleGameMenu();
+                break;
+            }
+            else
+            {
+                UI::printErrorMessage("Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                break;
+            }
         }
     }
 
