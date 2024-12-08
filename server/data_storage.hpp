@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <mutex>
 #include <chrono>
+#include <unistd.h>
+#include <limits.h>
 
 #include "../libraries/json.hpp"
 #include "../common/json_handler.hpp"
@@ -19,19 +21,15 @@ struct UserModel
 
     json serialize() const
     {
-        return 
-        {
-            {"elo", elo}
-        };
+        return {
+            {"elo", elo}};
     }
 
     static UserModel deserialize(const std::string &username, const json &j)
     {
-        return UserModel
-        {
+        return UserModel{
             username,
-            j.at("elo").get<uint16_t>()
-        };
+            j.at("elo").get<uint16_t>()};
     }
 };
 
@@ -142,11 +140,9 @@ public:
             return false; // Username đã tồn tại
         }
 
-        users[username] = UserModel
-        {
-            username, 
-            elo 
-        }; 
+        users[username] = UserModel{
+            username,
+            elo};
 
         saveUsersData();
 
@@ -209,18 +205,37 @@ private:
     DataStorage(const DataStorage &) = delete;
     DataStorage &operator=(const DataStorage &) = delete;
 
+    std::string getDataPath()
+    {
+        // Get the path of the executable
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        std::string exePath = "";
+        if (count != -1)
+        {
+            exePath = std::string(result, count);
+            size_t lastSlash = exePath.find_last_of("/\\");
+            exePath = exePath.substr(0, lastSlash);
+        }
+
+        // Construct the data path relative to the executable
+        return exePath + "/../data/";
+    }
+
     DataStorage()
     {
-        // Tải dữ liệu từ users.json
-        json users_j = JSONHandler::readJSON("../data/users.json");
+        std::string dataPath = getDataPath();
+
+        // Load users.json
+        json users_j = JSONHandler::readJSON(dataPath + "users.json");
         for (auto it = users_j.begin(); it != users_j.end(); ++it)
         {
             std::string username = it.key();
             users[username] = UserModel::deserialize(username, it.value());
         }
 
-        // Tải dữ liệu từ matches.json
-        json matches_j = JSONHandler::readJSON("../data/matches.json");
+        // Load matches.json
+        json matches_j = JSONHandler::readJSON(dataPath + "matches.json");
         for (auto it = matches_j.begin(); it != matches_j.end(); ++it)
         {
             std::string game_id = it.key();
@@ -235,7 +250,8 @@ private:
         {
             j[username] = user.serialize();
         }
-        JSONHandler::writeJSON("../data/users.json", j);
+        std::string dataPath = getDataPath();
+        JSONHandler::writeJSON(dataPath + "users.json", j);
         return true;
     }
 
@@ -246,7 +262,8 @@ private:
         {
             j[game_id] = match.serialize();
         }
-        JSONHandler::writeJSON("../data/matches.json", j);
+        std::string dataPath = getDataPath();
+        JSONHandler::writeJSON(dataPath + "matches.json", j);
         return true;
     }
 };
