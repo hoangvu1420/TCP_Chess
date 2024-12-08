@@ -11,11 +11,39 @@
 #include "network_client.hpp"
 #include "session_data.hpp"
 #include "logic_handler.hpp"
+#include "input_handler.hpp"
 #include "ui.hpp"
 
 class MessageHandler
 {
 public:
+    /**
+     * @brief Đẩy một gói tin mới vào hàng đợi xử lý
+     * 
+     * Tạo một luồng mới để xử lý gói tin và chạy ngầm
+     * @param packet Gói tin cần xử lý
+     * @return true nếu đẩy thành công
+     */
+    bool pushMessage(const Packet &packet)
+    {
+        SessionData &session_data = SessionData::getInstance();
+        // Start new handler thread
+        std::thread([this, packet, &session_data]() {
+            {
+                session_data.setCurrentHandler(std::this_thread::get_id());
+            }
+
+            handleMessage(packet);
+            
+            if (session_data.isCurrentHandler()) {
+                session_data.setCurrentHandler(std::thread::id());
+            }
+        }).detach();
+
+        return true;
+    }
+
+private:
     // Handle incoming messages ================================================================================
 
     /**
@@ -24,8 +52,7 @@ public:
      * @param packet Gói tin chứa thông điệp cần xử lý.
      * @return true nếu xử lý thành công, false nếu không xác định được loại thông điệp.
      */
-    bool handleMessage(const Packet &packet)
-    {
+    bool handleMessage(const Packet &packet){
         bool success = true;
         switch (packet.type)
         {
@@ -63,6 +90,11 @@ public:
             handleGameEnd(packet.payload);
             break;
 
+        case MessageType::CHALLENGE_NOTIFICATION:
+            // Handle challenge notification
+            handleChallengeNotification(packet.payload);
+            break;
+
         case MessageType::AUTO_MATCH_FOUND:
             // Handle auto match found
             handleAutoMatchFound(packet.payload);
@@ -89,7 +121,6 @@ public:
         return success;
     }
 
-private:
     // Handle specific message types ============================================================================
 
     void handleUnknown(const std::vector<uint8_t> &payload)
@@ -228,6 +259,18 @@ private:
 
         logic_handler.handleChallenge();
         logic_handler.handleGameMenu();
+    }
+
+    void handleChallengeNotification(const std::vector<uint8_t> &payload)
+    {
+        ChallengeNotificationMessage message = ChallengeNotificationMessage::deserialize(payload);
+
+        UI::printInfoMessage("Nhận được thách đấu từ người chơi khác.");
+        std::cout << "Challenger: " << message.from_username << std::endl;
+        std::cout << "ELO: " << message.elo << std::endl;
+
+        LogicHandler logic_handler;
+        logic_handler.handleChallengeDecision();
     }
 
 }; // namespace MessageHandler
