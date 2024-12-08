@@ -10,13 +10,14 @@
 
 #include "message_handler.hpp"
 #include "board_display.hpp"
+#include "input_handler.hpp"
 
 #define RESET "\033[0m"
-#define CYAN "\033[96m" // Cyan
-#define RED "\033[31m" // Red
-#define GREEN "\033[32m" // Green
+#define CYAN "\033[96m"   // Cyan
+#define RED "\033[31m"    // Red
+#define GREEN "\033[32m"  // Green
 #define YELLOW "\033[33m" // Yellow
-#define BLUE "\033[34m" // Blue
+#define BLUE "\033[34m"   // Blue
 
 /**
  * @namespace UI
@@ -34,14 +35,16 @@ namespace UI
     void printLogo(void)
     {
         std::cout << std::endl;
-        std::cout << BLUE << "=============================================================\n" << RESET;
+        std::cout << BLUE << "=============================================================\n"
+                  << RESET;
         std::cout << "   _______   _____  _____     _____  _                       \n";
         std::cout << "  |__   __| / ____||  __ \\   / ____|| |                     \n";
         std::cout << "     | |   | |     | |__) | | |     | |__    ___  ___  ___   \n";
         std::cout << "     | |   | |     |  ___/  | |     | '_ \\  / _ \\/ __|/ __|\n";
         std::cout << "     | |   | |____ | |      | |____ | | | ||  __/\\__ \\\\__ \\\n";
         std::cout << "     |_|    \\_____||_|       \\_____||_| |_| \\___||___/|___/\n";
-        std::cout << BLUE << "=============================================================\n" << RESET;
+        std::cout << BLUE << "=============================================================\n"
+                  << RESET;
     }
 
     // Print error message in red
@@ -66,27 +69,29 @@ namespace UI
     }
 
     // Display the main menu
-    int displayInitialMenu()
+    std::string displayInitialMenu()
     {
-        std::cout << "\n=========Main menu=========" << std::endl;
+        std::cout << "\n========= Main menu =========" << std::endl;
         std::cout << "Chọn hành động: " << std::endl;
         std::cout << "  1. Đăng ký" << std::endl;
         std::cout << "  2. Đăng nhập" << std::endl;
         std::cout << "  3. Thoát" << std::endl;
 
-        int choice;
         std::cout << "> " << std::flush;
-        std::cin >> choice;
-        return choice;
+        std::string result = InputHandler::waitForInput();
+
+        return result;
     }
 
     // Handle user input for registration
     std::string displayRegister()
     {
         std::string username;
-        std::cout << "\n=========Register=========" << std::endl;
-        std::cout << "Username: ";
-        std::cin >> username;
+        std::cout << "\n========= Register =========" << std::endl;
+        std::cout << "Username: " << std::flush;
+
+        username = InputHandler::waitForInput();
+
         return username;
     }
 
@@ -94,40 +99,41 @@ namespace UI
     std::string displayLogin(NetworkClient &network_client)
     {
         std::string username, password;
-        std::cout << "\n=========Login=========" << std::endl;
-        std::cout << "Username: ";
-        std::cin >> username;
-        
+        std::cout << "\n========= Login =========" << std::endl;
+        std::cout << "Username: " << std::flush;
+
+        username = InputHandler::waitForInput();
+
         return username;
     }
 
     // Display the game menu
-    int displayGameMenu()
+    std::string displayGameMenu()
     {
-        std::cout << "\n=========Game menu=========" << std::endl;
+        std::cout << "\n========= Game menu =========" << std::endl;
         std::cout << "Chọn hành động: " << std::endl;
         std::cout << "  1. Ghép trận tự động" << std::endl;
         std::cout << "  2. Danh sách người chơi trực tuyến" << std::endl;
         std::cout << "  3. Trở về" << std::endl;
 
-        int choice;
         std::cout << "> " << std::flush;
-        std::cin >> choice;
-        return choice;
+        std::string result = InputHandler::waitForInput();
+
+        return result;
     }
 
     // Display the auto match options
-    int displayAutoMatchOptions()
+    std::string displayAutoMatchOptions()
     {
-        std::cout << "\n=========Auto match=========" << std::endl;
+        std::cout << "\n========= Auto match =========" << std::endl;
         std::cout << "Chọn hành động: " << std::endl;
         std::cout << "  1. Chấp nhận" << std::endl;
         std::cout << "  2. Từ chối" << std::endl;
 
-        int choice;
         std::cout << "> " << std::flush;
-        std::cin >> choice;
-        return choice;
+        std::string result = InputHandler::waitForInput();
+
+        return result;
     }
 
     // Display the chess board
@@ -140,30 +146,49 @@ namespace UI
     {
         std::string move;
         std::cout << "Nhập nước đi (VD: e2e4): " << std::flush;
-        std::cin >> move;
+
+        move = InputHandler::waitForInput();
+
         return move;
     }
 
     // Display "challenge other players" menu
-    std::string displayChallengeMenu() {
+    std::string displayChallengeMenu()
+    {
         std::cout << "\n===== Thách đấu người chơi khác =====" << std::endl;
         std::cout << "1. Thách đấu người chơi khác" << std::endl;
         std::cout << "2. Quay lại" << std::endl;
 
-        int choice;
         std::cout << "> " << std::flush;
-        std::cin >> choice;
+        std::string result = InputHandler::waitForInput();
+        int choice = std::stoi(result);
 
-        if (choice == 1) {
-            std::string username;
-            std::cout << "Nhập username: " << std::flush;
-            std::cin >> username;
-            return username;
-        } else {
-            return "NO_USERNAME_PROVIDED";
+        if (choice == 1)
+        {
+            std::string opponent;
+            std::cout << "Nhập tên người chơi muốn thách đấu: " << std::flush;
+            opponent = InputHandler::waitForInput();
+
+            return opponent;
+        }
+        else
+        {
+            return "<NO_USERNAME_PROVIDED>";
         }
     }
 
+    // Display "challenge decision" menu
+    std::string displayChallengeDecision()
+    {
+        std::cout << "\n===== Thách đấu =====" << std::endl;
+        std::cout << "1. Chấp nhận" << std::endl;
+        std::cout << "2. Từ chối" << std::endl;
+
+        std::cout << "> " << std::flush;
+        std::string result = InputHandler::waitForInput(10000);
+
+        return result;
+    }
 
 } // namespace UI
 
