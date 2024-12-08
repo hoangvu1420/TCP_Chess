@@ -355,6 +355,12 @@ public:
         {
             UI::printInfoMessage("Đã gửi yêu cầu thách đấu. Đang chờ phản hồi...");
             std::this_thread::sleep_for(std::chrono::seconds(10));
+            // if the input was cancelled
+            if (SessionData::getInstance().shouldStop())
+            {
+                std::cout << "shouldStop..." << std::endl;
+                return;
+            }
             UI::printInfoMessage("Hết thời gian chờ đợi.");
         }
     }
