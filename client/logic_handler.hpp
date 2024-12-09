@@ -368,6 +368,7 @@ public:
     void handleChallengeDecision()
     {
         NetworkClient &network_client = NetworkClient::getInstance();
+        SessionData &session_data = SessionData::getInstance();
 
         while (true)
         {
@@ -399,13 +400,21 @@ public:
                     continue;
                 }
             }
+            
+            // create new response to challenge (accept = 1 /decline = 0)
+            // this message will be used in both cases below
+
+            ChallengeResponseMessage challenge_response_msg;
+            challenge_response_msg.from_username = session_data.getUsername();
 
             if (choice == 1)
             {
                 // Chấp nhận
-                ChallengeAcceptedMessage challenge_accepted_msg;
+                // ChallengeAcceptedMessage challenge_accepted_msg;
 
-                if (!network_client.sendPacket(challenge_accepted_msg.getType(), challenge_accepted_msg.serialize()))
+                challenge_response_msg.response = ChallengeResponseMessage::Response::ACCEPTED;
+
+                if (!network_client.sendPacket(challenge_response_msg.getType(), challenge_response_msg.serialize()))
                 {
                     UI::printErrorMessage("Gửi yêu cầu chấp nhận thách đấu thất bại.");
                     break;
@@ -417,9 +426,11 @@ public:
             else if (choice == 2)
             {
                 // Từ chối
-                ChallengeDeclinedMessage challenge_declined_msg;
+                // ChallengeDeclinedMessage challenge_declined_msg;
 
-                if (!network_client.sendPacket(challenge_declined_msg.getType(), challenge_declined_msg.serialize()))
+                challenge_response_msg.response = ChallengeResponseMessage::Response::DECLINED;
+
+                if (!network_client.sendPacket(challenge_response_msg.getType(), challenge_response_msg.serialize()))
                 {
                     UI::printErrorMessage("Gửi yêu cầu từ chối thách đấu thất bại.");
                     break;

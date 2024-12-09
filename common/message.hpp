@@ -984,8 +984,13 @@ struct ChallengeNotificationMessage
 #pragma region ChallengeResponseMessage
 struct ChallengeResponseMessage
 {
+    enum class Response : uint8_t {
+        DECLINED = 0x00,
+        ACCEPTED = 0x01
+    };
+
     std::string from_username;
-    uint8_t response;
+    Response response;
 
     MessageType getType() const
     {
@@ -1001,7 +1006,7 @@ struct ChallengeResponseMessage
         payload.insert(payload.end(), from_username.begin(), from_username.end());
 
         // Serialize response
-        payload.push_back(response);
+        payload.push_back(static_cast<uint8_t>(response));
 
         return payload;
     }
@@ -1017,7 +1022,7 @@ struct ChallengeResponseMessage
         pos += from_username_length;
 
         // Deserialize response
-        message.response = payload[pos++];
+        message.response = static_cast<Response>(payload[pos++]);
 
         return message;
     }
