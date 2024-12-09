@@ -67,6 +67,7 @@
         "valarray": "cpp",
         "variant": "cpp",
         "hash_map": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "future": "cpp"
     }
 }

@@ -5,7 +5,7 @@
       "name": "Launch Server",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/server_main", // Path to your compiled server executable
+      "program": "${workspaceFolder}/server/server_main", // Path to your compiled server executable
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
@@ -29,7 +29,7 @@
       "name": "Launch Client",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/client_main", // Path to your compiled client executable
+      "program": "${workspaceFolder}/client/client_main", // Path to your compiled client executable
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

@@ -19,7 +19,7 @@ public:
             std::ifstream infile(filename);
             if (!infile.is_open())
             {
-                // Nếu file không tồn tại, trả về một json rỗng
+                std::cerr << "Không thể mở file " << filename << " để đọc JSON." << std::endl;
                 return nlohmann::json::object();
             }
 

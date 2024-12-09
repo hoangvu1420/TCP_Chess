@@ -56,6 +56,7 @@ public:
             return false;
 
         board.makeMove(move);
+        half_moves_count++;
 
         // Kiểm tra kết quả trò chơi
         std::tie(reason, result) = board.isGameOver();
@@ -88,11 +89,6 @@ public:
 
         // Check if the king's square is attacked by the opponent
         return board.isAttacked(king, opponent);
-    }
-
-    int getHalfMovesCount()
-    {
-        return board.halfMoveClock();
     }
 
     bool isGameOver()
@@ -137,12 +133,17 @@ public:
         }
     }
 
+    int getHalfMovesCount() const {
+        return half_moves_count; 
+    }
+
 private:
     bool is_over;
 
     chess::Board board;
     chess::GameResult result = chess::GameResult::NONE;
     chess::GameResultReason reason = chess::GameResultReason::NONE;
+    int half_moves_count = 0;
 
     bool isValidMove(const chess::Board &board, const chess::Move &move)
     {
@@ -351,7 +352,7 @@ public:
     }
 
     /**
-     * Tạo trận đấu mới với tên người chơi trắng và đen, và tình huống FEN ban đầu.
+     * Tạo trận đấu mới với tên người chơi trắng và đen, và chuỗi FEN ban đầu.
      *
      * @param player_white_name Tên người chơi trắng.
      * @param player_black_name Tên người chơi đen.
@@ -457,6 +458,7 @@ public:
 
             if (is_game_over)
             {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 // Game over
                 std::string winner = getGameWinner(game_id);
                 std::string reason = getGameResultReason(game_id);
@@ -473,6 +475,34 @@ public:
 
                 network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
                 network_server.sendPacketToUsername(player_black_name, MessageType::GAME_END, serialized_end);
+
+                // Calculate ELO updates
+                DataStorage &datastorage = DataStorage::getInstance();
+                uint16_t white_elo = datastorage.getUserELO(player_white_name);
+                uint16_t black_elo = datastorage.getUserELO(player_black_name);
+                uint16_t new_white_elo;
+                uint16_t new_black_elo;
+
+                if (winner == player_white_name)
+                {
+                    new_white_elo = white_elo + 10;
+                    new_black_elo = black_elo - 10;
+                }
+                else if (winner == player_black_name)
+                {
+                    new_white_elo = white_elo - 10;
+                    new_black_elo = black_elo + 10;
+                }
+                else if (winner == "<0>")
+                {
+                    // Draw
+                    new_white_elo = white_elo + 5;
+                    new_black_elo = black_elo + 5;
+                }
+
+                // Update ELOs
+                datastorage.updateUserELO(player_white_name, new_white_elo);
+                datastorage.updateUserELO(player_black_name, new_black_elo);
 
                 // Remove game
                 removeGame(game_id);

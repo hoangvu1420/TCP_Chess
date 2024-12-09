@@ -9,7 +9,7 @@
                 "-g",
                 "${workspaceFolder}/server/server_main.cpp",
                 "-o",
-                "${workspaceFolder}/build/server_main",
+                "${workspaceFolder}/server/server_main",
                 "-lpthread"
             ],
             "group": "build",
@@ -25,7 +25,7 @@
                 "-g",
                 "${workspaceFolder}/client/client_main.cpp",
                 "-o",
-                "${workspaceFolder}/build/client_main",
+                "${workspaceFolder}/client/client_main",
                 "-lpthread"
             ],
             "group": "build",

@@ -5,6 +5,8 @@
 #include <mutex>
 #include <atomic>
 
+#include "input_handler.hpp"
+
 struct GameStatus
 {
     std::string game_id = "";
@@ -29,6 +31,22 @@ public:
     // Delete copy constructor and assignment operator
     SessionData(const SessionData&) = delete;
     SessionData& operator=(const SessionData&) = delete;
+
+    bool isCurrentHandler() {
+        return std::this_thread::get_id() == current_handler_id.load();
+    }
+
+    void setCurrentHandler(std::thread::id id) {
+        std::lock_guard<std::mutex> lock(handler_mutex);
+        current_handler_id.store(id);
+        InputHandler::setCancelCheck([this]() {
+            return !isCurrentHandler();
+        });
+    }
+
+    bool shouldStop() {
+        return !isCurrentHandler();
+    }
 
     bool getRunning() const {
         return running.load();
@@ -120,6 +138,9 @@ private:
     GameStatus game_status_;
 
     mutable std::mutex mutex_;
+
+    std::atomic<std::thread::id> current_handler_id;
+    std::mutex handler_mutex;
 };
 
 #endif // SESSION_DATA_HPP
