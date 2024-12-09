@@ -18,18 +18,22 @@ struct UserModel
 {
     std::string username;
     uint16_t elo;
+    std::vector<std::string> match_history;
 
     json serialize() const
     {
         return {
-            {"elo", elo}};
+            {"elo", elo},
+            {"match_history", match_history}};
     }
 
     static UserModel deserialize(const std::string &username, const json &j)
     {
         return UserModel{
             username,
-            j.at("elo").get<uint16_t>()};
+            j.at("elo").get<uint16_t>(),
+            j.value("match_history", std::vector<std::string>{}) // Sử dụng giá trị mặc định
+        };
     }
 };
 
@@ -142,7 +146,9 @@ public:
 
         users[username] = UserModel{
             username,
-            elo};
+            elo,
+            {} // match_history ban đầu là rỗng;
+        };
 
         saveUsersData();
 
@@ -188,10 +194,124 @@ public:
         return false;
     }
 
+    bool addMatchToUserHistory(const std::string &username, const std::string &game_id)
+    {
+        std::lock_guard<std::mutex> lock(users_mutex);
+
+        auto it = users.find(username);
+        if (it != users.end())
+        {
+            it->second.match_history.push_back(game_id);
+            saveUsersData();
+            return true;
+        }
+        return false;
+    }
+
     std::unordered_map<std::string, UserModel> getPlayerList()
     {
         std::lock_guard<std::mutex> lock(users_mutex);
         return users;
+    }
+
+public:
+    /**
+     * @brief Đăng ký một trận đấu mới.
+     *
+     * @param game_id ID của trận đấu.
+     * @param white_username Tên người chơi cầm quân trắng.
+     * @param black_username Tên người chơi cầm quân đen.
+     * @param start_fen Vị trí FEN khởi đầu.
+     * @return true nếu đăng ký thành công, false nếu trận đấu đã tồn tại.
+     */
+    bool registerMatch(const std::string &game_id, const std::string &white_username, const std::string &black_username, const std::string &start_fen)
+    {
+        std::lock_guard<std::mutex> lock(matches_mutex);
+
+        if (matches.find(game_id) != matches.end())
+        {
+            return false; // Trận đấu đã tồn tại
+        }
+
+        matches[game_id] = MatchModel{
+            game_id,
+            white_username,
+            black_username,
+            start_fen,
+            std::chrono::steady_clock::now(),
+            {}, // moves ban đầu là rỗng
+            "", // result ban đầu
+            ""  // reason ban đầu
+        };
+
+        saveMatchesData();
+        return true;
+    }
+
+    /**
+     * @brief Cập nhật kết quả của một trận đấu.
+     *
+     * @param game_id ID của trận đấu.
+     * @param result Kết quả trận đấu.
+     * @param reason Lý do kết quả.
+     * @return true nếu cập nhật thành công, false nếu không tìm thấy trận đấu.
+     */
+    bool updateMatchResult(const std::string &game_id, const std::string &result, const std::string &reason)
+    {
+        std::lock_guard<std::mutex> lock(matches_mutex);
+
+        auto it = matches.find(game_id);
+        if (it != matches.end())
+        {
+            it->second.result = result;
+            it->second.reason = reason;
+            saveMatchesData();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @brief Lấy thông tin một trận đấu.
+     *
+     * @param game_id ID của trận đấu.
+     * @return MatchModel nếu tìm thấy, hoặc ném ngoại lệ nếu không tìm thấy.
+     */
+    MatchModel getMatch(const std::string &game_id)
+    {
+        std::lock_guard<std::mutex> lock(matches_mutex);
+
+        auto it = matches.find(game_id);
+        if (it != matches.end())
+        {
+            return it->second;
+        }
+        throw std::runtime_error("Match not found.");
+    }
+
+    /**
+     * @brief Thêm một nước đi vào trận đấu.
+     *
+     * @param game_id ID của trận đấu.
+     * @param move Nước đi cần thêm.
+     * @return true nếu thành công, false nếu không tìm thấy trận đấu.
+     */
+    bool addMove(const std::string &game_id, const std::string &uci_move, const std::string &fen)
+    {
+        std::lock_guard<std::mutex> lock(matches_mutex);
+
+        auto it = matches.find(game_id);
+        if (it != matches.end())
+        {
+            MatchModel::Move move;
+            move.uci_move = uci_move;
+            move.fen = fen;
+            move.move_time = std::chrono::steady_clock::now();
+            it->second.moves.push_back(move);
+            saveMatchesData();
+            return true;
+        }
+        return false;
     }
 
 private:
