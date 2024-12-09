@@ -403,13 +403,13 @@ public:
             if (choice == 1)
             {
                 // Chấp nhận
-                // ChallengeAcceptedMessage challenge_accepted_msg;
+                ChallengeAcceptedMessage challenge_accepted_msg;
 
-                // if (!network_client.sendPacket(challenge_accepted_msg.getType(), challenge_accepted_msg.serialize()))
-                // {
-                //     UI::printErrorMessage("Gửi yêu cầu chấp nhận thách đấu thất bại.");
-                //     break;
-                // }
+                if (!network_client.sendPacket(challenge_accepted_msg.getType(), challenge_accepted_msg.serialize()))
+                {
+                    UI::printErrorMessage("Gửi yêu cầu chấp nhận thách đấu thất bại.");
+                    break;
+                }
 
                 UI::printInfoMessage("Đã chấp nhận thách đấu.");
                 break;
@@ -417,13 +417,13 @@ public:
             else if (choice == 2)
             {
                 // Từ chối
-                // ChallengeDeclinedMessage challenge_declined_msg;
+                ChallengeDeclinedMessage challenge_declined_msg;
 
-                // if (!network_client.sendPacket(challenge_declined_msg.getType(), challenge_declined_msg.serialize()))
-                // {
-                //     UI::printErrorMessage("Gửi yêu cầu từ chối thách đấu thất bại.");
-                //     break;
-                // }
+                if (!network_client.sendPacket(challenge_declined_msg.getType(), challenge_declined_msg.serialize()))
+                {
+                    UI::printErrorMessage("Gửi yêu cầu từ chối thách đấu thất bại.");
+                    break;
+                }
 
                 UI::printInfoMessage("Đã từ chối thách đấu.");
                 handleGameMenu();
