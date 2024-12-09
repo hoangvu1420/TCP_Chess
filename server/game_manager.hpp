@@ -72,7 +72,7 @@ public:
             if (result == chess::GameResult::DRAW)
                 winner = "<0>";
             else if (result == chess::GameResult::LOSE)
-                winner = (current_turn == player_white_name) ? player_black_name : player_white_name;
+                winner = (current_turn == player_white_name) ? player_white_name : player_black_name;
         }
 
         return true;

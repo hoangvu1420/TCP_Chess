@@ -1,14 +1,18 @@
 {
     "viet1": {
-        "elo": 1190,
+        "elo": 1210,
         "match_history": [
-            "game_viet2_viet1_20241209124943_803"
+            "game_viet2_viet1_20241209124943_803",
+            "game_viet1_viet2_20241209130003_435",
+            "game_viet2_viet1_20241209131103_134"
         ]
     },
     "viet2": {
-        "elo": 1210,
+        "elo": 1190,
         "match_history": [
-            "game_viet2_viet1_20241209124943_803"
+            "game_viet2_viet1_20241209124943_803",
+            "game_viet1_viet2_20241209130003_435",
+            "game_viet2_viet1_20241209131103_134"
         ]
     }
 }
