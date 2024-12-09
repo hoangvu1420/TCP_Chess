@@ -133,8 +133,9 @@ public:
         }
     }
 
-    int getHalfMovesCount() const {
-        return half_moves_count; 
+    int getHalfMovesCount() const
+    {
+        return half_moves_count;
     }
 
 private:
@@ -376,6 +377,11 @@ public:
         std::string game_id = oss.str();
 
         games[game_id] = std::make_shared<Game>(game_id, player_white_name, player_black_name, initial_fen);
+
+        DataStorage &datastorage = DataStorage::getInstance();
+        datastorage.registerMatch(game_id, player_white_name, player_black_name, initial_fen);
+        datastorage.addMatchToUserHistory(player_white_name, game_id);
+        datastorage.addMatchToUserHistory(player_black_name, game_id);
         return game_id;
     }
 
@@ -427,6 +433,15 @@ public:
     {
         if (makeMove(game_id, uci_move))
         {
+            // Lấy thông tin trò chơi
+            std::shared_ptr<Game> game = getGame(game_id);
+            std::string player_white_name = game->player_white_name;
+            std::string player_black_name = game->player_black_name;
+
+            // Lưu nước đi vào cơ sở dữ liệu thông qua DataStorage
+            DataStorage &datastorage = DataStorage::getInstance();
+            datastorage.addMove(game_id, uci_move, getGameFen(game_id));
+
             NetworkServer &network_server = NetworkServer::getInstance();
 
             bool is_game_over = isGameOver(game_id);
@@ -437,10 +452,6 @@ public:
             game_status_update_msg.fen = getGameFen(game_id);
             game_status_update_msg.current_turn_username = getGameCurrentTurn(game_id);
             game_status_update_msg.is_game_over = is_game_over;
-
-            std::shared_ptr<Game> game = getGame(game_id);
-            std::string player_white_name = game->player_white_name;
-            std::string player_black_name = game->player_black_name;
 
             if (game->isInCheck())
             {
@@ -463,6 +474,9 @@ public:
                 std::string winner = getGameWinner(game_id);
                 std::string reason = getGameResultReason(game_id);
                 uint16_t half_moves_count = getGameHalfMovesCount(game_id);
+
+                // Gọi hàm updateMatchResult để cập nhật kết quả trận đấu
+                datastorage.updateMatchResult(game_id, winner, reason);
 
                 // Send GameEndMessage to both players
                 GameEndMessage game_end_msg;
