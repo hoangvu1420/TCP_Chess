@@ -1070,4 +1070,37 @@ struct ChallengeAcceptedMessage
 };
 #pragma endregion ChallengeAcceptedMessage
 
+#pragma region ChallengeDeclinedMessage
+struct ChallengeDeclinedMessage
+{
+    std::string from_username;
+
+    MessageType getType() const
+    {
+        return MessageType::CHALLENGE_DECLINED;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(from_username.size()));
+        payload.insert(payload.end(), from_username.begin(), from_username.end());
+
+        return payload;
+    }
+
+    static ChallengeDeclinedMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        ChallengeDeclinedMessage message;
+
+        size_t pos = 0;
+        uint8_t from_username_length = payload[pos++];
+        message.from_username = std::string(payload.begin() + pos, payload.begin() + pos + from_username_length);
+
+        return message;
+    }
+};
+#pragma endregion ChallengeDeclinedMessage
+
 #endif // MESSAGE_HPP
