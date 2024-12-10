@@ -289,10 +289,10 @@ private:
             game_start_msg.starting_player_username = game_start_msg.player1_username; // Player 1 starts
             game_start_msg.fen = chess::constants::STARTPOS;
 
-            std::vector<uint8_t> serialized = game_start_msg.serialize();
+            std::vector<uint8_t> gs_serialized = game_start_msg.serialize();
 
-            network_server.sendPacket(challenger_fd, MessageType::GAME_START, serialized);
-            network_server.sendPacket(client_fd, MessageType::GAME_START, serialized);
+            network_server.sendPacket(challenger_fd, MessageType::GAME_START, gs_serialized);
+            network_server.sendPacket(client_fd, MessageType::GAME_START, gs_serialized);
 
         }
         else

@@ -29,6 +29,31 @@
         "start_time": 12098452302911,
         "white_username": "viet1"
     },
+    "game_viet1_viet2_20241210210047_169": {
+        "black_username": "viet2",
+        "moves": [
+            {
+                "fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+                "move_time": 7716616581732,
+                "uci_move": "e2e4"
+            },
+            {
+                "fen": "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+                "move_time": 7757614376394,
+                "uci_move": "d7d5"
+            },
+            {
+                "fen": "rnbqkbnr/ppp1pppp/8/3p4/4P3/2N5/PPPP1PPP/R1BQKBNR b KQkq - 1 2",
+                "move_time": 7878112983307,
+                "uci_move": "b1c3"
+            }
+        ],
+        "reason": "",
+        "result": "",
+        "start_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "start_time": 7661491242116,
+        "white_username": "viet1"
+    },
     "game_viet2_viet1_20241209124943_803": {
         "black_username": "viet1",
         "moves": [
