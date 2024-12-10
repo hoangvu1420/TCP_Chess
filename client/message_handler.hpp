@@ -111,6 +111,16 @@ private:
             handlePlayerList(packet.payload);
             break;
 
+        case MessageType::CHALLENGE_DECLINED:
+            // Handle challenge declined
+            handleChallengeDeclined(packet.payload);
+            break;
+
+        case MessageType::CHALLENGE_ACCEPTED:
+            // Handle challenge accepted
+            handleChallengeAccepted(packet.payload);
+            break;
+
         default:
             // Handle unknown message type
             handleUnknown(packet.payload);
@@ -225,6 +235,10 @@ private:
                   << "Reason: " << message.reason << "\n"
                   << "Half_moves_count: " << message.half_moves_count
                   << std::endl;
+        
+        // print the menu after game ends
+        LogicHandler logic_handler;
+        logic_handler.handleGameMenu();
     }
 
     void handleAutoMatchFound(const std::vector<uint8_t> &payload)
@@ -271,6 +285,23 @@ private:
 
         LogicHandler logic_handler;
         logic_handler.handleChallengeDecision(message.from_username);
+    }
+
+    void handleChallengeDeclined(const std::vector<uint8_t> &payload)
+    {
+        ChallengeDeclinedMessage message = ChallengeDeclinedMessage::deserialize(payload);
+
+        UI::printInfoMessage("Thách đấu đã bị từ chối.");
+
+        LogicHandler logic_handler;
+        logic_handler.handleGameMenu();
+    }
+
+    void handleChallengeAccepted(const std::vector<uint8_t> &payload)
+    {
+        ChallengeAcceptedMessage message = ChallengeAcceptedMessage::deserialize(payload);
+
+        UI::printInfoMessage("Thách đấu đã được chấp nhận.");
     }
 
 }; // namespace MessageHandler
