@@ -270,7 +270,7 @@ private:
         std::cout << "ELO: " << message.elo << std::endl;
 
         LogicHandler logic_handler;
-        logic_handler.handleChallengeDecision();
+        logic_handler.handleChallengeDecision(message.from_username);
     }
 
 }; // namespace MessageHandler

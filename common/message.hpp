@@ -988,9 +988,10 @@ struct ChallengeResponseMessage
         DECLINED = 0x00,
         ACCEPTED = 0x01
     };
-
-    std::string from_username;
     Response response;
+
+    // caution: this username is challenger's username, not the one challenged
+    std::string from_username;
 
     MessageType getType() const
     {

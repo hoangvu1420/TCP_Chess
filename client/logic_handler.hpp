@@ -365,7 +365,7 @@ public:
         }
     }
 
-    void handleChallengeDecision()
+    void handleChallengeDecision(std::string challenger_username)
     {
         NetworkClient &network_client = NetworkClient::getInstance();
         SessionData &session_data = SessionData::getInstance();
@@ -405,7 +405,7 @@ public:
             // this message will be used in both cases below
 
             ChallengeResponseMessage challenge_response_msg;
-            challenge_response_msg.from_username = session_data.getUsername();
+            challenge_response_msg.from_username = challenger_username;
 
             if (choice == 1)
             {

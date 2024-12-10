@@ -60,6 +60,11 @@ public:
             handleChallengeRequest(client_fd, packet.payload);
             break;
 
+        case MessageType::CHALLENGE_RESPONSE:
+            // Handle incoming challenge response
+            handleChallengeResponse(client_fd, packet.payload);
+            break;
+
         default:
             // Handle unknown message type
             handleUnknown(client_fd, packet.payload);
@@ -241,6 +246,64 @@ private:
         else
         {
             // to complete
+        }
+    }
+
+    void handleChallengeResponse(int client_fd, const std::vector<uint8_t> &payload)
+    {
+        ChallengeResponseMessage message = ChallengeResponseMessage::deserialize(payload);
+        NetworkServer &network_server = NetworkServer::getInstance();
+        GameManager &gameManager = GameManager::getInstance();
+
+        std::string challenger_username = message.from_username;
+        std::string challenged_username = network_server.getUsername(client_fd);
+
+        int challenger_fd = network_server.getClientFD(challenger_username);
+        // challenged_fd is client_fd
+
+        std::cout << "[CHALLENGE_RESPONSE] from: " << challenged_username
+                  << ", challenged by: " << challenger_username
+                  << ", accepted: " << static_cast<uint8_t>(message.response) << std::endl;
+
+        if (message.response == ChallengeResponseMessage::Response::ACCEPTED)
+        {
+            std::string game_id = gameManager.createGame(challenger_username, challenged_username);
+            
+            // Is handling PendingGame required? Review game_manager
+
+            ChallengeAcceptedMessage challenge_accepted_msg;
+            challenge_accepted_msg.from_username = challenged_username;
+            challenge_accepted_msg.game_id = game_id;
+
+            std::vector<uint8_t> serialized = challenge_accepted_msg.serialize();
+            network_server.sendPacket(challenger_fd, challenge_accepted_msg.getType(), serialized);
+
+            std::cout << "Game " << game_id << " started." << std::endl;
+
+            // Notify both players about the game start
+            GameStartMessage game_start_msg;
+            game_start_msg.game_id = game_id;
+            game_start_msg.player1_username = challenger_username;
+            game_start_msg.player2_username = challenged_username;
+
+            game_start_msg.starting_player_username = game_start_msg.player1_username; // Player 1 starts
+            game_start_msg.fen = chess::constants::STARTPOS;
+
+            std::vector<uint8_t> serialized = game_start_msg.serialize();
+
+            network_server.sendPacket(challenger_fd, MessageType::GAME_START, serialized);
+            network_server.sendPacket(client_fd, MessageType::GAME_START, serialized);
+
+        }
+        else
+        {
+            // If the challenge was declined, send a message to the challenger
+            ChallengeDeclinedMessage challenge_declined_msg;
+            challenge_declined_msg.from_username = network_server.getUsername(client_fd);
+            std::vector<uint8_t> serialized = challenge_declined_msg.serialize();
+            network_server.sendPacket(challenger_fd, challenge_declined_msg.getType(), serialized);
+
+            std::cout << "Decline message sent to " << message.from_username << std::endl;
         }
     }
 };

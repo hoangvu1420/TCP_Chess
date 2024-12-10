@@ -218,6 +218,25 @@ void test_player_list_message() {
               << std::endl;
 }
 
+void test_challenge_response_message() {
+    // Arrange
+    ChallengeResponseMessage original_message;
+    original_message.from_username = "challenger";
+    original_message.response = ChallengeResponseMessage::Response::ACCEPTED;
+
+    // Act
+    std::vector<uint8_t> serialized = original_message.serialize();
+    ChallengeResponseMessage deserialized_message = ChallengeResponseMessage::deserialize(serialized);
+
+    // Assert
+    bool from_username_match = original_message.from_username == deserialized_message.from_username;
+    bool response_match = original_message.response == deserialized_message.response;
+
+    std::cout << "ChallengeResponseMessage Test: " 
+              << (from_username_match && response_match ? "Passed" : "Failed") 
+              << std::endl;
+}
+
 int main() {
     // test_register_message();
     // test_register_failure_message();
@@ -229,9 +248,10 @@ int main() {
     // test_game_status_update_message();
     // test_game_end_message();
 
-    test_challenge_request_message();
+    // test_challenge_request_message();
     // test_game_status_update_message_extended();
 
     // test_player_list_message();
+    test_challenge_response_message();
     return 0;
 }
