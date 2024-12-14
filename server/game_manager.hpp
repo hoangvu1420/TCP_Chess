@@ -470,6 +470,18 @@ public:
             network_server.sendPacketToUsername(player_white_name, MessageType::GAME_STATUS_UPDATE, serialized);
             network_server.sendPacketToUsername(player_black_name, MessageType::GAME_STATUS_UPDATE, serialized);
 
+            // Also send the update to all spectators
+            SpectateMoveMessage spectate_move_msg;
+            spectate_move_msg.fen = game_status_update_msg.fen;
+            spectate_move_msg.current_turn_username = game_status_update_msg.current_turn_username;
+            spectate_move_msg.is_white = (game_status_update_msg.current_turn_username == player_white_name);
+
+            for (int spectator_fd : game_spectators[game_id])
+            {
+                network_server.sendPacket(spectator_fd, spectate_move_msg.getType(), spectate_move_msg.serialize());
+            }
+            // End sending to spectators            
+
             if (is_game_over)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -492,6 +504,15 @@ public:
 
                 network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
                 network_server.sendPacketToUsername(player_black_name, MessageType::GAME_END, serialized_end);
+
+                // Also send the end message to all spectators and remove them
+                SpectateEndMessage spectate_end_msg;
+                for (int spectator_fd : game_spectators[game_id])
+                {
+                    network_server.sendPacket(spectator_fd, spectate_end_msg.getType(), spectate_end_msg.serialize());
+                    removeSpectator(game_id, spectator_fd);
+                }
+                // End sending to spectators
 
                 // Calculate ELO updates
                 DataStorage &datastorage = DataStorage::getInstance();
@@ -721,6 +742,39 @@ public:
             }
         }
         return "";
+    }
+
+    void addSpectator(const std::string& game_id, int client_fd) {
+        std::lock_guard<std::mutex> lock(games_mutex);
+        
+        // Check if game exists
+        if (games.find(game_id) == games.end()) {
+            return;
+        }
+
+        // Add spectator to the game's spectator list
+        if (game_spectators.find(game_id) == game_spectators.end()) {
+            game_spectators[game_id] = std::vector<int>();
+        }
+        
+        // Only add if not already spectating
+        auto& spectators = game_spectators[game_id];
+        if (std::find(spectators.begin(), spectators.end(), client_fd) == spectators.end()) {
+            spectators.push_back(client_fd);
+        }
+    }
+
+    void removeSpectator(const std::string& game_id, int client_fd) {
+        std::lock_guard<std::mutex> lock(games_mutex);
+        
+        auto it = game_spectators.find(game_id);
+        if (it != game_spectators.end()) {
+            auto& spectators = it->second;
+            spectators.erase(
+                std::remove(spectators.begin(), spectators.end(), client_fd),
+                spectators.end()
+            );
+        }
     }
 };
 

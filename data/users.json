@@ -1,4 +1,8 @@
 {
+    "minh": {
+        "elo": 1200,
+        "match_history": []
+    },
     "viet1": {
         "elo": 1210,
         "match_history": [
@@ -7,7 +11,21 @@
             "game_viet2_viet1_20241209131103_134",
             "game_viet1_viet2_20241210210047_169",
             "game_viet1_viet2_20241210215828_49",
-            "game_viet1_viet2_20241210220116_510"
+            "game_viet1_viet2_20241210220116_510",
+            "game_viet1_viet2_20241214163025_208",
+            "game_viet1_viet2_20241214163058_435",
+            "game_viet1_viet2_20241214163415_996",
+            "game_viet2_viet1_20241214163935_779",
+            "game_viet1_viet2_20241214170355_622",
+            "game_viet1_viet2_20241214181600_522",
+            "game_viet1_viet2_20241214181811_321",
+            "game_viet1_viet2_20241214181939_610",
+            "game_viet1_viet2_20241214182257_288",
+            "game_viet2_viet1_20241214182728_898",
+            "game_viet1_viet2_20241214192603_269",
+            "game_viet1_viet2_20241214192715_129",
+            "game_viet1_viet2_20241214193455_781",
+            "game_viet1_viet2_20241214193527_285"
         ]
     },
     "viet2": {
@@ -18,7 +36,21 @@
             "game_viet2_viet1_20241209131103_134",
             "game_viet1_viet2_20241210210047_169",
             "game_viet1_viet2_20241210215828_49",
-            "game_viet1_viet2_20241210220116_510"
+            "game_viet1_viet2_20241210220116_510",
+            "game_viet1_viet2_20241214163025_208",
+            "game_viet1_viet2_20241214163058_435",
+            "game_viet1_viet2_20241214163415_996",
+            "game_viet2_viet1_20241214163935_779",
+            "game_viet1_viet2_20241214170355_622",
+            "game_viet1_viet2_20241214181600_522",
+            "game_viet1_viet2_20241214181811_321",
+            "game_viet1_viet2_20241214181939_610",
+            "game_viet1_viet2_20241214182257_288",
+            "game_viet2_viet1_20241214182728_898",
+            "game_viet1_viet2_20241214192603_269",
+            "game_viet1_viet2_20241214192715_129",
+            "game_viet1_viet2_20241214193455_781",
+            "game_viet1_viet2_20241214193527_285"
         ]
     }
 }

@@ -1174,6 +1174,8 @@ struct RequestSpectateMessage
 #pragma region SpectateSuccessMessage
 struct SpectateSuccessMessage
 {
+    std::string game_id;
+
     MessageType getType() const
     {
         return MessageType::SPECTATE_SUCCESS;
@@ -1181,12 +1183,23 @@ struct SpectateSuccessMessage
 
     std::vector<uint8_t> serialize() const
     {
-        return {}; // No payload
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(game_id.size()));
+        payload.insert(payload.end(), game_id.begin(), game_id.end());
+
+        return payload;
     }
 
     static SpectateSuccessMessage deserialize(const std::vector<uint8_t> &payload)
     {
-        return SpectateSuccessMessage(); // No payload to deserialize
+        SpectateSuccessMessage message;
+        size_t pos = 0;
+
+        uint8_t game_id_length = payload[pos++];
+        message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
+        return message;
     }
 };
 #pragma endregion SpectateSuccessMessage
@@ -1210,5 +1223,122 @@ struct SpectateFailureMessage
     }
 };
 #pragma endregion SpectateFailureMessage
+
+#pragma region SpectateMoveMessage
+/*
+Send from server to spectator client to update the game state.
+
+Payload structure:
+    - uint8_t fen_length (1 byte)
+    - char[fen_length] fen (fen_length bytes)
+    - uint8_t current_turn_username_length (1 byte)
+    - char[current_turn_username_length] current_turn_username (current_turn_username_length bytes)
+    - uint8_t is_white (1 byte)
+*/
+struct SpectateMoveMessage
+{
+    std::string fen;
+    std::string current_turn_username;
+    bool is_white;
+
+    MessageType getType() const
+    {
+        return MessageType::SPECTATE_MOVE;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(fen.size()));
+        payload.insert(payload.end(), fen.begin(), fen.end());
+
+        payload.push_back(static_cast<uint8_t>(current_turn_username.size()));
+        payload.insert(payload.end(), current_turn_username.begin(), current_turn_username.end());
+
+        payload.push_back(static_cast<uint8_t>(is_white));
+
+        return payload;
+    }
+
+    static SpectateMoveMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        SpectateMoveMessage message;
+        size_t pos = 0;
+
+        uint8_t fen_length = payload[pos++];
+        message.fen = std::string(payload.begin() + pos, payload.begin() + pos + fen_length);
+        pos += fen_length;
+
+        uint8_t username_length = payload[pos++];
+        message.current_turn_username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+        pos += username_length;
+
+        message.is_white = payload[pos] != 0;
+
+        return message;
+    }
+};
+#pragma endregion SpectateMoveMessage
+
+#pragma region SpectateEndMessage
+struct SpectateEndMessage
+{
+    MessageType getType() const
+    {
+        return MessageType::SPECTATE_END;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        return {}; // No payload
+    }
+
+    static SpectateEndMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        return SpectateEndMessage(); // No payload to deserialize
+    }
+};
+#pragma endregion SpectateEndMessage
+
+#pragma region SpectateExitMessage
+/*
+Send from client to server to exit spectating a game.
+
+Payload structure:
+    - uint8_t game_id_length (1 byte)
+    - char[game_id_length] game_id (game_id_length bytes)
+*/
+struct SpectateExitMessage
+{
+    std::string game_id;
+
+    MessageType getType() const
+    {
+        return MessageType::SPECTATE_EXIT;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(game_id.size()));
+        payload.insert(payload.end(), game_id.begin(), game_id.end());
+
+        return payload;
+    }
+
+    static SpectateExitMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        SpectateExitMessage message;
+
+        size_t pos = 0;
+        uint8_t game_id_length = payload[pos++];
+        message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+
+        return message;
+    }
+};
+#pragma endregion SpectateExitMessage
 
 #endif // MESSAGE_HPP

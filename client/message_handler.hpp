@@ -121,6 +121,26 @@ private:
             handleChallengeAccepted(packet.payload);
             break;
 
+        case MessageType::SPECTATE_SUCCESS:
+            // Handle spectate success
+            handleSpectateSuccess(packet.payload);
+            break;
+
+        case MessageType::SPECTATE_FAILURE:
+            // Handle spectate failure
+            handleSpectateFailure(packet.payload);
+            break;
+
+        case MessageType::SPECTATE_END:
+            // Handle spectate end
+            handleSpectateEnd(packet.payload);
+            break;
+
+        case MessageType::SPECTATE_MOVE:
+            // Handle spectate move
+            handleSpectateMove(packet.payload);
+            break;
+
         default:
             // Handle unknown message type
             handleUnknown(packet.payload);
@@ -265,13 +285,15 @@ private:
 
         for (const auto &player : message.players)
         {
-            std::cout << "Username: " << player.username << "\n"
-                        << "ELO: " << player.elo << std::endl;
+            std::cout << "Username: " << player.username << " - "
+                        << "ELO: " << player.elo 
+                        << " - Status: " << (player.in_game ? "Playing" : "Available")
+                        << std::endl;
         }
 
         LogicHandler logic_handler;
 
-        logic_handler.handleChallenge();
+        logic_handler.handlePlayerListDecision();
         logic_handler.handleGameMenu();
     }
 
@@ -302,6 +324,56 @@ private:
         ChallengeAcceptedMessage message = ChallengeAcceptedMessage::deserialize(payload);
 
         UI::printInfoMessage("Thách đấu đã được chấp nhận.");
+    }
+
+    void handleSpectateSuccess(const std::vector<uint8_t> &payload)
+    {
+        NetworkClient &network_client = NetworkClient::getInstance();
+        SpectateSuccessMessage message = SpectateSuccessMessage::deserialize(payload);
+        std::string game_id = message.game_id;
+
+        UI::printInfoMessage("Bắt đầu quan sát trận đấu.");
+
+        std::cout << "Nhập Enter để kết thúc quan sát." << std::endl;
+
+        // Blocking
+        std::string input = InputHandler::waitForInput();
+
+        SpectateExitMessage spectate_exit_msg;
+        spectate_exit_msg.game_id = game_id;
+        network_client.sendPacket(spectate_exit_msg.getType(), spectate_exit_msg.serialize());
+
+        LogicHandler logic_handler;
+        logic_handler.handleGameMenu();
+    }
+
+    void handleSpectateFailure(const std::vector<uint8_t> &payload)
+    {
+        SpectateFailureMessage message = SpectateFailureMessage::deserialize(payload);
+
+        UI::printErrorMessage("Yêu cầu bị từ chối. Người chơi không online.");
+    }
+
+    void handleSpectateEnd(const std::vector<uint8_t> &payload)
+    {
+        LogicHandler logic_handler;
+
+        SpectateEndMessage message = SpectateEndMessage::deserialize(payload);
+
+        UI::printInfoMessage("Kết thúc quan sát trận đấu.");
+
+        logic_handler.handleGameMenu();
+    }
+
+    void handleSpectateMove(const std::vector<uint8_t> &payload)
+    {
+        SpectateMoveMessage message = SpectateMoveMessage::deserialize(payload);
+
+        std::cout << "Lượt đi của: " << message.current_turn_username 
+                << " - " << ((message.is_white) ? "Trắng" : "Đen") << std::endl;
+
+        UI::showBoard(message.fen);
+        std::cout << "Nhập Enter để kết thúc quan sát." << std::endl;
     }
 
 }; // namespace MessageHandler

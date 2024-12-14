@@ -152,29 +152,44 @@ namespace UI
         return move;
     }
 
-    // Display "challenge other players" menu
-    std::string displayChallengeMenu()
+    // Client's decision after seeing the list of players
+    struct PlayerListDecision
     {
-        std::cout << "\n===== Thách đấu người chơi khác =====" << std::endl;
+        int choice;
+        std::string username;
+    };
+
+    // Display "challenge other players" menu
+    PlayerListDecision displayPlayerListOption()
+    {
+        std::cout << "\n===== Lựa chọn =====" << std::endl;
         std::cout << "1. Thách đấu người chơi khác" << std::endl;
-        std::cout << "2. Quay lại" << std::endl;
+        std::cout << "2. Xem người khác chơi" << std::endl;
+        std::cout << "3. Quay lại" << std::endl;
 
         std::cout << "> " << std::flush;
         std::string result = InputHandler::waitForInput();
         int choice = std::stoi(result);
 
-        if (choice == 1)
-        {
-            std::string opponent;
-            std::cout << "Nhập tên người chơi muốn thách đấu: " << std::flush;
-            opponent = InputHandler::waitForInput();
+        PlayerListDecision decision;
 
-            return opponent;
-        }
-        else
+        switch (choice)
         {
-            return "<NO_USERNAME_PROVIDED>";
+            case 1:
+                decision.choice = 1;
+                std::cout << "Nhập tên người chơi muốn thách đấu: " << std::flush;
+                decision.username = InputHandler::waitForInput();
+                break;
+            case 2:
+                decision.choice = 2;
+                std::cout << "Nhập tên người chơi muốn thách đấu: " << std::flush;
+                decision.username = InputHandler::waitForInput();
+                break;
+            default:
+                decision.choice = 3;
+                break;
         }
+        return decision;
     }
 
     // Display "challenge decision" menu

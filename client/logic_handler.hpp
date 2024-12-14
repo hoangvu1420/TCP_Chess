@@ -331,37 +331,57 @@ public:
         }
     }
 
-    void handleChallenge()
+    void handlePlayerListDecision()
     {
-        // Thách đấu người chơi khác
-        std::string opponent = UI::displayChallengeMenu();
-
-        // Nếu người dùng chọn quay lại
-        if (opponent == "<NO_USERNAME_PROVIDED>")
-            return;
-
-        // Nếu người dùng không chọn quay lại và nhập username
-        ChallengeRequestMessage challenge_request_msg;
-
-        challenge_request_msg.to_username = opponent;
-
         NetworkClient &network_client = NetworkClient::getInstance();
 
-        if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
+        /* Ask the user to choose an option
+         * 1. Challenge a player
+         * 2. Watch a player playing an ongoing match
+         * 3. Go back
+         */
+        UI::PlayerListDecision decision = UI::displayPlayerListOption();
+
+        ChallengeRequestMessage challenge_request_msg;
+        RequestSpectateMessage request_spectate_msg;
+
+        switch (decision.choice)
         {
-            UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
-        }
-        else
-        {
-            UI::printInfoMessage("Đã gửi yêu cầu thách đấu. Đang chờ phản hồi...");
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-            // if the input was cancelled
-            if (SessionData::getInstance().shouldStop())
+        case 1:
+            challenge_request_msg.to_username = decision.username;
+
+            if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
             {
-                std::cout << "shouldStop..." << std::endl;
-                return;
+                UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
             }
-            UI::printInfoMessage("Hết thời gian chờ đợi.");
+            else
+            {
+                UI::printInfoMessage("Đã gửi yêu cầu thách đấu. Đang chờ phản hồi...");
+                std::this_thread::sleep_for(std::chrono::seconds(10));
+                // if the input was cancelled
+                if (SessionData::getInstance().shouldStop())
+                {
+                    std::cout << "shouldStop..." << std::endl;
+                    return;
+                }
+                UI::printInfoMessage("Hết thời gian chờ đợi.");
+            }
+            break;
+        case 2:
+            // Xem người chơi khác chơi
+            request_spectate_msg.username = decision.username;
+            if (!network_client.sendPacket(request_spectate_msg.getType(), request_spectate_msg.serialize()))
+            {
+                UI::printErrorMessage("Gửi yêu cầu xem trận thất bại.");
+            }
+            else {
+                UI::printInfoMessage("Đã gửi yêu cầu xem trận.");
+            }
+            break;
+        case 3:
+            break;
+        default:
+            break;
         }
     }
 
@@ -400,7 +420,7 @@ public:
                     continue;
                 }
             }
-            
+
             // create new response to challenge (accept = 1 /decline = 0)
             // this message will be used in both cases below
 
@@ -449,7 +469,6 @@ public:
     }
 
 private:
-
 }; // class LogicHandler
 
 #endif // LOGIC_HANDLER_HPP

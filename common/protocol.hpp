@@ -61,6 +61,9 @@ enum class MessageType : uint8_t
     REQUEST_SPECTATE = 0x60,
     SPECTATE_SUCCESS = 0x61,
     SPECTATE_FAILURE = 0x62,
+    SPECTATE_MOVE = 0x63,
+    SPECTATE_END = 0x64,
+    SPECTATE_EXIT = 0x65,
 };
 
 // Cấu trúc gói tin cơ bản

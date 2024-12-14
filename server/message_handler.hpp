@@ -65,6 +65,16 @@ public:
             handleChallengeResponse(client_fd, packet.payload);
             break;
 
+        case MessageType::REQUEST_SPECTATE:
+            // Handle request to spectate a game
+            handleRequestSpectate(client_fd, packet.payload);
+            break;
+
+        case MessageType::SPECTATE_EXIT:
+            // Handle spectator exit
+            handleSpectateExit(client_fd, packet.payload);
+            break;
+
         default:
             // Handle unknown message type
             handleUnknown(client_fd, packet.payload);
@@ -190,30 +200,36 @@ private:
 
     void handleRequestPlayerList(int client_fd, const std::vector<uint8_t> &payload)
     {
+        DataStorage &storage = DataStorage::getInstance();
+        NetworkServer &server = NetworkServer::getInstance();
+        GameManager &gameManager = GameManager::getInstance();
+
         RequestPlayerListMessage message = RequestPlayerListMessage::deserialize(payload);
 
-        std::cout << "[REQUEST_PLAYER_LIST]" << std::endl;
+        std::cout << "[REQUEST_PLAYER_LIST] from " << server.getUsername(client_fd) << std::endl;
 
-        DataStorage &storage = DataStorage::getInstance();
         std::unordered_map<std::string, UserModel> players = storage.getPlayerList();
-
         PlayerListMessage response;
-
-        NetworkServer &server = NetworkServer::getInstance();
 
         for (const auto &pair : players)
         {
             PlayerListMessage::Player player;
             player.username = pair.second.username;
             player.elo = pair.second.elo;
+            player.in_game = gameManager.isUserInGame(player.username);
+
+            if (player.in_game)
+            {
+                player.game_id = gameManager.getUserGameId(player.username);
+            }
 
             if (server.isUserLoggedIn(player.username)) {
                 response.players.push_back(player);
-                std::cout << "Logged in user: " << player.username << ", ELO: " << player.elo << std::endl;
             }
         }
 
         server.sendPacket(client_fd, response.getType(), response.serialize());
+        std::cout << "Player list sent to " << server.getUsername(client_fd) << std::endl;
     }
 
     void handleChallengeRequest(int client_fd, const std::vector<uint8_t> &payload)
@@ -305,6 +321,55 @@ private:
 
             std::cout << "Decline message sent to " << message.from_username << std::endl;
         }
+    }
+
+    void handleRequestSpectate(int client_fd, const std::vector<uint8_t> &payload)
+    {
+        RequestSpectateMessage message = RequestSpectateMessage::deserialize(payload);
+        NetworkServer &network_server = NetworkServer::getInstance();
+        GameManager &gameManager = GameManager::getInstance();
+
+        std::string playing_username = message.username;
+        std::string requester_username = network_server.getUsername(client_fd);
+
+        bool is_playing = gameManager.isUserInGame(playing_username);
+
+        std::cout << "[REQUEST_SPECTATE] from: " << requester_username << ", to watch: " << playing_username << std::endl;
+
+        if (is_playing)
+        {
+            std::string game_id = gameManager.getUserGameId(playing_username);
+
+            gameManager.addSpectator(game_id, client_fd);
+
+            SpectateSuccessMessage spectate_success_msg;
+            spectate_success_msg.game_id = game_id;
+            network_server.sendPacket(client_fd, spectate_success_msg.getType(), spectate_success_msg.serialize());
+
+            std::cout << "Spectate success message sent to " << requester_username << std::endl;
+        }
+        else
+        {
+            // Notify the requester that the player is not in a game
+            SpectateFailureMessage spectate_failure_msg;
+            network_server.sendPacket(client_fd, spectate_failure_msg.getType(), spectate_failure_msg.serialize());
+
+            std::cout << "Spectate failure message sent to " << requester_username << std::endl;
+        }
+    }
+
+    void handleSpectateExit(int client_fd, const std::vector<uint8_t> &payload)
+    {
+        SpectateExitMessage message = SpectateExitMessage::deserialize(payload);
+        NetworkServer &network_server = NetworkServer::getInstance();
+        GameManager &gameManager = GameManager::getInstance();
+
+        std::string game_id = message.game_id;
+        std::string username = network_server.getUsername(client_fd);
+
+        gameManager.removeSpectator(game_id, client_fd);
+
+        std::cout << "[SPECTATE_EXIT] " << username << " exited spectating game " << game_id << std::endl;
     }
 };
 
