@@ -850,6 +850,10 @@ Player structure:
     - uint8_t username_length (1 byte)
     - char[username_length] username (username_length bytes)
     - uint16_t elo (2 bytes)
+    - uint8_t in_game (1 byte)
+    - if in_game:
+        - uint8_t game_id_length (1 byte)
+        - char[game_id_length] game_id (game_id_length bytes)
 */
 struct PlayerListMessage
 {
@@ -857,6 +861,8 @@ struct PlayerListMessage
     {
         std::string username;
         uint16_t elo;
+        bool in_game;
+        std::string game_id;
     };
 
     std::vector<Player> players;
@@ -878,6 +884,13 @@ struct PlayerListMessage
 
             std::vector<uint8_t> elo_bytes = to_big_endian_16(player.elo);
             payload.insert(payload.end(), elo_bytes.begin(), elo_bytes.end());
+
+            payload.push_back(static_cast<uint8_t>(player.in_game));
+            
+            if (player.in_game) {
+                payload.push_back(static_cast<uint8_t>(player.game_id.size()));
+                payload.insert(payload.end(), player.game_id.begin(), player.game_id.end());
+            }
         }
 
         return payload;
@@ -892,14 +905,24 @@ struct PlayerListMessage
 
         for (uint8_t i = 0; i < number_of_players; ++i)
         {
+            Player player;
+            
             uint8_t username_length = payload[pos++];
-            std::string username(payload.begin() + pos, payload.begin() + pos + username_length);
-
+            player.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
             pos += username_length;
-            uint16_t elo = from_big_endian_16(payload, pos);
 
+            player.elo = from_big_endian_16(payload, pos);
             pos += 2;
-            message.players.push_back({username, elo});
+
+            player.in_game = payload[pos++];
+            
+            if (player.in_game) {
+                uint8_t game_id_length = payload[pos++];
+                player.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+                pos += game_id_length;
+            }
+
+            message.players.push_back(player);
         }
         
         return message;

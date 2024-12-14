@@ -193,9 +193,9 @@ void test_player_list_message() {
     // Arrange
     PlayerListMessage original_message;
     original_message.players = {
-        {"player1", 1500},
-        {"player2", 1600},
-        {"player3", 1700}
+        {"player1", 1500, true, "game123"},
+        {"player2", 1600, false, ""},
+        {"player3", 1700, true, "game456"}
     };
 
     // Act
@@ -207,7 +207,9 @@ void test_player_list_message() {
     bool players_match = true;
     for (size_t i = 0; i < original_message.players.size(); ++i) {
         if (original_message.players[i].username != deserialized_message.players[i].username ||
-            original_message.players[i].elo != deserialized_message.players[i].elo) {
+            original_message.players[i].elo != deserialized_message.players[i].elo ||
+            original_message.players[i].in_game != deserialized_message.players[i].in_game ||
+            original_message.players[i].game_id != deserialized_message.players[i].game_id) {
             players_match = false;
             break;
         }
@@ -251,7 +253,7 @@ int main() {
     // test_challenge_request_message();
     // test_game_status_update_message_extended();
 
-    // test_player_list_message();
-    test_challenge_response_message();
+     test_player_list_message();
+    // test_challenge_response_message();
     return 0;
 }
