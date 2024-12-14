@@ -331,9 +331,10 @@ public:
         }
     }
 
-    void handlePlayerListDecision()
+    void handlePlayerListDecision(std::vector<PlayerListMessage::Player> &players)
     {
         NetworkClient &network_client = NetworkClient::getInstance();
+        SessionData &session_data = SessionData::getInstance();
 
         /* Ask the user to choose an option
          * 1. Challenge a player
@@ -342,12 +343,44 @@ public:
          */
         UI::PlayerListDecision decision = UI::displayPlayerListOption();
 
+        /* Logic check */
+        
+
+        bool userOnline = false;
+
         ChallengeRequestMessage challenge_request_msg;
         RequestSpectateMessage request_spectate_msg;
 
         switch (decision.choice)
         {
-        case 1:
+        case 1: /* Thách đấu người khác */
+            // Kiểm tra username có trùng với bản thân không
+            if (decision.username == session_data.getUsername())
+            {
+                UI::printErrorMessage("Không thể thách đấu với chính mình.");
+                handleGameMenu();
+                return;
+            }
+
+            // Kiểm tra người chơi có online không
+            for (const auto& player : players) {
+            if (player.username == decision.username) {
+                if (player.in_game) {
+                    UI::printErrorMessage("Người chơi đang trong trận đấu.");
+                    handleGameMenu();
+                    return;
+                }
+                userOnline = true;
+                break;
+                }
+            }
+
+            if (!userOnline) {
+                UI::printErrorMessage("Người chơi không online hoặc không tồn tại.");
+                handleGameMenu();
+                return;
+            }
+
             challenge_request_msg.to_username = decision.username;
 
             if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
@@ -369,8 +402,33 @@ public:
                 handleGameMenu();
             }
             break;
-        case 2:
-            // Xem người chơi khác chơi
+        case 2: /*Xem người chơi khác chơi*/ 
+            // Kiểm tra xem có định xem chính mình chơi không
+            if (decision.username == session_data.getUsername())
+            {
+                UI::printErrorMessage("Không thể xem chính mình chơi.");
+                handleGameMenu();
+                return;
+            }
+            // Kiểm tra người chơi có online không
+            for (const auto& player : players) {
+            if (player.username == decision.username) {
+                if (!player.in_game) {
+                    UI::printErrorMessage("Người chơi này hiện không trong trận đấu nào.");
+                    handleGameMenu();
+                    return;
+                }
+                userOnline = true;
+                break;
+                }
+            }
+
+            if (!userOnline) {
+                UI::printErrorMessage("Người chơi không online hoặc không tồn tại.");
+                handleGameMenu();
+                return;
+            }
+
             request_spectate_msg.username = decision.username;
             if (!network_client.sendPacket(request_spectate_msg.getType(), request_spectate_msg.serialize()))
             {

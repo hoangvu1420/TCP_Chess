@@ -293,7 +293,7 @@ private:
 
         LogicHandler logic_handler;
 
-        logic_handler.handlePlayerListDecision();
+        logic_handler.handlePlayerListDecision(message.players);
     }
 
     void handleChallengeNotification(const std::vector<uint8_t> &payload)
@@ -350,7 +350,7 @@ private:
     {
         SpectateFailureMessage message = SpectateFailureMessage::deserialize(payload);
 
-        UI::printErrorMessage("Người chơi này không trong trận đấu nào.");
+        UI::printErrorMessage("Người chơi này hiện không trong trận đấu nào.");
 
         LogicHandler logic_handler;
         logic_handler.handleGameMenu();
@@ -371,10 +371,9 @@ private:
     {
         SpectateMoveMessage message = SpectateMoveMessage::deserialize(payload);
 
-        std::cout << "Lượt đi của: " << message.current_turn_username 
-                << " - " << ((message.is_white) ? "Trắng" : "Đen") << std::endl;
-
         UI::showBoard(message.fen);
+        std::cout << "Tiếp theo sẽ đến lượt của: " << message.current_turn_username 
+                << " - " << ((message.is_white) ? "Trắng" : "Đen") << std::endl;
         std::cout << "Nhập Enter để kết thúc quan sát." << std::endl;
     }
 
