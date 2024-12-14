@@ -56,6 +56,11 @@ enum class MessageType : uint8_t
     AUTO_MATCH_ACCEPTED = 0x57,
     AUTO_MATCH_DECLINED = 0x58,
     MATCH_DECLINED_NOTIFICATION = 0x59,
+
+    // Spectate
+    REQUEST_SPECTATE = 0x60,
+    SPECTATE_SUCCESS = 0x61,
+    SPECTATE_FAILURE = 0x62,
 };
 
 // Cấu trúc gói tin cơ bản

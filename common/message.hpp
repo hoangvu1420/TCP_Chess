@@ -1131,4 +1131,84 @@ struct ChallengeDeclinedMessage
 };
 #pragma endregion ChallengeDeclinedMessage
 
+#pragma region RequestSpectateMessage
+/*
+Send from client to server to request spectating a player's match.
+
+Payload structure:
+    - uint8_t username_length (1 byte)
+    - char[username_length] username (username_length bytes)
+*/
+struct RequestSpectateMessage
+{
+    std::string username;
+
+    MessageType getType() const
+    {
+        return MessageType::REQUEST_SPECTATE;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(username.size()));
+        payload.insert(payload.end(), username.begin(), username.end());
+
+        return payload;
+    }
+
+    static RequestSpectateMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        RequestSpectateMessage message;
+
+        size_t pos = 0;
+        uint8_t username_length = payload[pos++];
+        message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
+        return message;
+    }
+};
+#pragma endregion RequestSpectateMessage
+
+#pragma region SpectateSuccessMessage
+struct SpectateSuccessMessage
+{
+    MessageType getType() const
+    {
+        return MessageType::SPECTATE_SUCCESS;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        return {}; // No payload
+    }
+
+    static SpectateSuccessMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        return SpectateSuccessMessage(); // No payload to deserialize
+    }
+};
+#pragma endregion SpectateSuccessMessage
+
+#pragma region SpectateFailureMessage
+struct SpectateFailureMessage
+{
+    MessageType getType() const
+    {
+        return MessageType::SPECTATE_FAILURE;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        return {}; // No payload
+    }
+
+    static SpectateFailureMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        return SpectateFailureMessage(); // No payload to deserialize
+    }
+};
+#pragma endregion SpectateFailureMessage
+
 #endif // MESSAGE_HPP
