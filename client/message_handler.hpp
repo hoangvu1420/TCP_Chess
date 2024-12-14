@@ -294,7 +294,6 @@ private:
         LogicHandler logic_handler;
 
         logic_handler.handlePlayerListDecision();
-        logic_handler.handleGameMenu();
     }
 
     void handleChallengeNotification(const std::vector<uint8_t> &payload)
@@ -351,7 +350,10 @@ private:
     {
         SpectateFailureMessage message = SpectateFailureMessage::deserialize(payload);
 
-        UI::printErrorMessage("Yêu cầu bị từ chối. Người chơi không online.");
+        UI::printErrorMessage("Người chơi này không trong trận đấu nào.");
+
+        LogicHandler logic_handler;
+        logic_handler.handleGameMenu();
     }
 
     void handleSpectateEnd(const std::vector<uint8_t> &payload)
@@ -360,7 +362,7 @@ private:
 
         SpectateEndMessage message = SpectateEndMessage::deserialize(payload);
 
-        UI::printInfoMessage("Kết thúc quan sát trận đấu.");
+        UI::printInfoMessage("Trận đấu bạn quan sát đã kết thúc.");
 
         logic_handler.handleGameMenu();
     }

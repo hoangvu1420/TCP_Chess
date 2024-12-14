@@ -353,6 +353,7 @@ public:
             if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
             {
                 UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
+                handleGameMenu();
             }
             else
             {
@@ -365,6 +366,7 @@ public:
                     return;
                 }
                 UI::printInfoMessage("Hết thời gian chờ đợi.");
+                handleGameMenu();
             }
             break;
         case 2:
@@ -373,14 +375,17 @@ public:
             if (!network_client.sendPacket(request_spectate_msg.getType(), request_spectate_msg.serialize()))
             {
                 UI::printErrorMessage("Gửi yêu cầu xem trận thất bại.");
+                handleGameMenu();
             }
             else {
                 UI::printInfoMessage("Đã gửi yêu cầu xem trận.");
             }
             break;
         case 3:
+            handleGameMenu();
             break;
         default:
+            handleGameMenu();
             break;
         }
     }

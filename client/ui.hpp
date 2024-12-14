@@ -182,7 +182,7 @@ namespace UI
                 break;
             case 2:
                 decision.choice = 2;
-                std::cout << "Nhập tên người chơi muốn thách đấu: " << std::flush;
+                std::cout << "Nhập tên người chơi mà bạn muốn theo dõi trận đấu: " << std::flush;
                 decision.username = InputHandler::waitForInput();
                 break;
             default:

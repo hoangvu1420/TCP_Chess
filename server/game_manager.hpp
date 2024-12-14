@@ -587,6 +587,15 @@ public:
             game_end_msg.half_moves_count = game->getHalfMovesCount();
             network_server.sendPacketToUsername(opponent_name, MessageType::GAME_END, game_end_msg.serialize());
 
+            // Also send the end message to all spectators and remove them
+            SpectateEndMessage spectate_end_msg;
+            for (int spectator_fd : game_spectators[game_id])
+            {
+                network_server.sendPacket(spectator_fd, spectate_end_msg.getType(), spectate_end_msg.serialize());
+                removeSpectator(game_id, spectator_fd);
+            }
+            // End sending to spectators
+
             // Remove the game from the system
             removeGame(game_id);
         }
