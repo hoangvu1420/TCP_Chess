@@ -216,6 +216,9 @@ private:
     std::unordered_map<std::string, PendingGame> pending_games;
     std::mutex games_mutex;
 
+    // game_id -> vector of spectator client_fds
+    std::unordered_map<std::string, std::vector<int>> game_spectators; 
+
     std::queue<int> matchmaking_queue; // Queue of client_fds
     std::condition_variable cv;
     bool stop_matching;
@@ -690,6 +693,34 @@ public:
             matchmaking_queue.push(other_fd);
             cv.notify_one();
         }
+    }
+
+    bool isUserInGame(const std::string& username) {
+        std::lock_guard<std::mutex> lock(games_mutex);
+        for (const auto& game_pair : games) {
+            std::shared_ptr<Game> game = game_pair.second;
+            if (game->player_white_name == username || 
+                game->player_black_name == username) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::string getUserGameId(const std::string& username) {
+        if (!isUserInGame(username)) {
+            return "";
+        }
+
+        std::lock_guard<std::mutex> lock(games_mutex);
+        for (const auto& game_pair : games) {
+            std::shared_ptr<Game> game = game_pair.second;
+            if (game->player_white_name == username || 
+                game->player_black_name == username) {
+                return game_pair.first;
+            }
+        }
+        return "";
     }
 };
 
