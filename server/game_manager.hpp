@@ -785,6 +785,21 @@ public:
             );
         }
     }
+
+    // Remove the client_fd from all games' spectator lists 
+    // (assume we don't know which games the client is spectating)
+    void removeSpectatorFromAllGames(int client_fd) {
+        std::lock_guard<std::mutex> lock(games_mutex);
+        
+        // Iterate through all games' spectator lists
+        for (auto& pair : game_spectators) {
+            auto& spectators = pair.second;
+            spectators.erase(
+                std::remove(spectators.begin(), spectators.end(), client_fd),
+                spectators.end()
+            );
+        }
+    }
 };
 
 #endif // GAME_MANAGER_HPP
