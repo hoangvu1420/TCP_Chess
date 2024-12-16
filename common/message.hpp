@@ -1387,4 +1387,126 @@ struct SurrenderMessage
     }
 };
 #pragma endregion SurrenderMessage
+
+#pragma region RequestMatchHistoryMessage
+struct RequestMatchHistoryMessage {
+    std::string username;
+
+    MessageType getType() const {
+        return MessageType::REQUEST_MATCH_HISTORY;
+    }
+
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> payload;
+        payload.push_back(static_cast<uint8_t>(username.size()));
+        payload.insert(payload.end(), username.begin(), username.end());
+        return payload;
+    }
+
+    static RequestMatchHistoryMessage deserialize(const std::vector<uint8_t>& payload) {
+        RequestMatchHistoryMessage message;
+        size_t pos = 0;
+        uint8_t username_length = payload[pos++];
+        message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+        return message;
+    }
+};
+#pragma endregion RequestMatchHistoryMessage
+
+#pragma region MatchHistoryMessage
+struct MatchHistoryMessage {
+    struct Match {
+        std::string game_id;
+        std::string opponent_username;
+        bool won;
+        std::string date;
+        std::vector<std::string> moves; 
+
+        std::vector<uint8_t> serializeMoves() const {
+            std::vector<uint8_t> serialized_moves;
+            serialized_moves.push_back(static_cast<uint8_t>(moves.size()));
+            for (const auto& move : moves) {
+                serialized_moves.push_back(static_cast<uint8_t>(move.size()));
+                serialized_moves.insert(serialized_moves.end(), move.begin(), move.end());
+            }
+            return serialized_moves;
+        }
+
+        static std::vector<std::string> deserializeMoves(const std::vector<uint8_t>& payload, size_t& pos) {
+            std::vector<std::string> moves;
+            uint8_t number_of_moves = payload[pos++];
+            for (uint8_t i = 0; i < number_of_moves; ++i) {
+                uint8_t move_length = payload[pos++];
+                std::string move(payload.begin() + pos, payload.begin() + pos + move_length);
+                pos += move_length;
+                moves.push_back(move);
+            }
+            return moves;
+        }
+    };
+
+    std::vector<Match> matches;
+
+    MessageType getType() const {
+        return MessageType::MATCH_HISTORY;
+    }
+
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> payload;
+        payload.push_back(static_cast<uint8_t>(matches.size()));
+
+        for (const auto& match : matches) {
+            payload.push_back(static_cast<uint8_t>(match.game_id.size()));
+            payload.insert(payload.end(), match.game_id.begin(), match.game_id.end());
+
+            payload.push_back(static_cast<uint8_t>(match.opponent_username.size()));
+            payload.insert(payload.end(), match.opponent_username.begin(), match.opponent_username.end());
+
+            payload.push_back(static_cast<uint8_t>(match.won));
+
+            payload.push_back(static_cast<uint8_t>(match.date.size()));
+            payload.insert(payload.end(), match.date.begin(), match.date.end());
+
+            // Serialize moves
+            std::vector<uint8_t> moves_serialized = match.serializeMoves();
+            payload.insert(payload.end(), moves_serialized.begin(), moves_serialized.end());
+        }
+
+        return payload;
+    }
+
+    static MatchHistoryMessage deserialize(const std::vector<uint8_t>& payload) {
+        MatchHistoryMessage message;
+
+        size_t pos = 0;
+        uint8_t number_of_matches = payload[pos++];
+
+        for (uint8_t i = 0; i < number_of_matches; ++i) {
+            Match match;
+
+            uint8_t game_id_length = payload[pos++];
+            match.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+            pos += game_id_length;
+
+            uint8_t opponent_username_length = payload[pos++];
+            match.opponent_username = std::string(payload.begin() + pos, payload.begin() + pos + opponent_username_length);
+            pos += opponent_username_length;
+
+            match.won = payload[pos++];
+
+            uint8_t date_length = payload[pos++];
+            match.date = std::string(payload.begin() + pos, payload.begin() + pos + date_length);
+            pos += date_length;
+
+            // Deserialize moves
+            match.moves = Match::deserializeMoves(payload, pos);
+
+            message.matches.push_back(match);
+        }
+
+        return message;
+    }
+};
+#pragma endregion MatchHistoryMessage
+
 #endif // MESSAGE_HPP

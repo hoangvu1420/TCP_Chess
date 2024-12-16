@@ -217,7 +217,7 @@ private:
     std::mutex games_mutex;
 
     // game_id -> vector of spectator client_fds
-    std::unordered_map<std::string, std::vector<int>> game_spectators; 
+    std::unordered_map<std::string, std::vector<int>> game_spectators;
 
     std::queue<int> matchmaking_queue; // Queue of client_fds
     std::condition_variable cv;
@@ -480,7 +480,7 @@ public:
             {
                 network_server.sendPacket(spectator_fd, spectate_move_msg.getType(), spectate_move_msg.serialize());
             }
-            // End sending to spectators            
+            // End sending to spectators
 
             if (is_game_over)
             {
@@ -737,79 +737,92 @@ public:
         }
     }
 
-    bool isUserInGame(const std::string& username) {
+    bool isUserInGame(const std::string &username)
+    {
         std::lock_guard<std::mutex> lock(games_mutex);
-        for (const auto& game_pair : games) {
+        for (const auto &game_pair : games)
+        {
             std::shared_ptr<Game> game = game_pair.second;
-            if (game->player_white_name == username || 
-                game->player_black_name == username) {
+            if (game->player_white_name == username ||
+                game->player_black_name == username)
+            {
                 return true;
             }
         }
         return false;
     }
 
-    std::string getUserGameId(const std::string& username) {
-        if (!isUserInGame(username)) {
+    std::string getUserGameId(const std::string &username)
+    {
+        if (!isUserInGame(username))
+        {
             return "";
         }
 
         std::lock_guard<std::mutex> lock(games_mutex);
-        for (const auto& game_pair : games) {
+        for (const auto &game_pair : games)
+        {
             std::shared_ptr<Game> game = game_pair.second;
-            if (game->player_white_name == username || 
-                game->player_black_name == username) {
+            if (game->player_white_name == username ||
+                game->player_black_name == username)
+            {
                 return game_pair.first;
             }
         }
         return "";
     }
 
-    void addSpectator(const std::string& game_id, int client_fd) {
+    void addSpectator(const std::string &game_id, int client_fd)
+    {
         std::lock_guard<std::mutex> lock(games_mutex);
-        
+
         // Check if game exists
-        if (games.find(game_id) == games.end()) {
+        if (games.find(game_id) == games.end())
+        {
             return;
         }
 
         // Add spectator to the game's spectator list
-        if (game_spectators.find(game_id) == game_spectators.end()) {
+        if (game_spectators.find(game_id) == game_spectators.end())
+        {
             game_spectators[game_id] = std::vector<int>();
         }
-        
+
         // Only add if not already spectating
-        auto& spectators = game_spectators[game_id];
-        if (std::find(spectators.begin(), spectators.end(), client_fd) == spectators.end()) {
+        auto &spectators = game_spectators[game_id];
+        if (std::find(spectators.begin(), spectators.end(), client_fd) == spectators.end())
+        {
             spectators.push_back(client_fd);
         }
     }
 
-    void removeSpectator(const std::string& game_id, int client_fd) {
+    void removeSpectator(const std::string &game_id, int client_fd)
+    {
         std::lock_guard<std::mutex> lock(games_mutex);
-        
+
         auto it = game_spectators.find(game_id);
-        if (it != game_spectators.end()) {
-            auto& spectators = it->second;
+        if (it != game_spectators.end())
+        {
+            auto &spectators = it->second;
             spectators.erase(
                 std::remove(spectators.begin(), spectators.end(), client_fd),
-                spectators.end()
-            );
+                spectators.end());
         }
     }
 
-    // Remove the client_fd from all games' spectator lists 
+    // Remove the client_fd from all games' spectator lists
     // (assume we don't know which games the client is spectating)
-    void removeSpectatorFromAllGames(int client_fd) {
+    void removeSpectatorFromAllGames(int client_fd)
+    {
         std::lock_guard<std::mutex> lock(games_mutex);
-        
+
         // Iterate through all games' spectator lists
-        for (auto& pair : game_spectators) {
-            auto& spectators = pair.second;
+        for (auto &pair : game_spectators)
+        {
+            auto &spectators = pair.second;
             spectators.erase(
                 std::remove(spectators.begin(), spectators.end(), client_fd),
-                spectators.end()
-            );
+                spectators.end());
         }
     }
     std::string getOpponent(const std::string &game_id, const std::string &player)
@@ -828,8 +841,48 @@ public:
 
     void endGame(const std::string &game_id)
     {
-        games.erase(game_id);
-        std::cout << "Game " << game_id << " has been removed from active games." << std::endl;
+        DataStorage &datastorage = DataStorage::getInstance();
+
+        std::string winner = getGameWinner(game_id);
+        std::string reason = "Player surrendered";
+
+        // Gọi hàm updateMatchResult để cập nhật kết quả trận đấu
+        datastorage.updateMatchResult(game_id, winner, reason);
+
+        // Calculate ELO updates
+        DataStorage &datastorage = DataStorage::getInstance();
+
+        std::string player_white_name = getGame(game_id)->player_white_name;
+        std::string player_black_name = getGame(game_id)->player_black_name;
+        
+        uint16_t white_elo = datastorage.getUserELO(player_white_name);
+        uint16_t black_elo = datastorage.getUserELO(player_black_name);
+        uint16_t new_white_elo;
+        uint16_t new_black_elo;
+
+        if (winner == player_white_name)
+        {
+            new_white_elo = white_elo + 10;
+            new_black_elo = black_elo - 10;
+        }
+        else if (winner == player_black_name)
+        {
+            new_white_elo = white_elo - 10;
+            new_black_elo = black_elo + 10;
+        }
+        else if (winner == "<0>")
+        {
+            // Draw
+            new_white_elo = white_elo + 5;
+            new_black_elo = black_elo + 5;
+        }
+
+        // Update ELOs
+        datastorage.updateUserELO(player_white_name, new_white_elo);
+        datastorage.updateUserELO(player_black_name, new_black_elo);
+
+        // Remove game
+        removeGame(game_id);
     }
 };
 

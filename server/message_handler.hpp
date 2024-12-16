@@ -79,6 +79,11 @@ public:
             handleSurrender(client_fd, packet.payload);
             break;
 
+        case MessageType::REQUEST_MATCH_HISTORY:
+            // Handle request match history
+            handleRequestMatchHistory(client_fd, packet.payload);
+            break;
+
         default:
             // Handle unknown message type
             handleUnknown(client_fd, packet.payload);
@@ -402,14 +407,32 @@ private:
         GameEndMessage end_message;
         end_message.game_id = message.game_id;
         end_message.winner_username = opponent_username;
-        end_message.reason = surrendering_player + " đã đầu hàng.";
+        end_message.reason = surrendering_player + " has surrendered.";
 
         std::vector<uint8_t> serialized = end_message.serialize();
         server.sendPacket(client_fd, end_message.getType(), serialized); // Người đầu hàng
         int opponent_fd = server.getClientFD(opponent_username);
         server.sendPacket(opponent_fd, end_message.getType(), serialized); // Đối thủ
     }
-};
 
+    void handleRequestMatchHistory(int client_fd, const std::vector<uint8_t> &payload)
+    {
+        RequestMatchHistoryMessage message = RequestMatchHistoryMessage::deserialize(payload);
+        NetworkServer &server = NetworkServer::getInstance();
+        DataStorage &storage = DataStorage::getInstance();
+
+        std::string username = server.getUsername(client_fd);
+
+        std::cout << "[REQUEST_MATCH_HISTORY] from " << username << std::endl;
+
+        // std::vector<MatchHistoryMessage::Match> matches = storage.getMatchHistory(username);
+
+        // MatchHistoryMessage response;
+        // response.matches = matches;
+
+        // server.sendPacket(client_fd, response.getType(), response.serialize());
+        std::cout << "Match history sent to " << username << std::endl;
+    }
+};
 
 #endif // MESSAGE_HANDLER_HPP

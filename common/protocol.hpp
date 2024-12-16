@@ -28,6 +28,10 @@ enum class MessageType : uint8_t
     REQUEST_PLAYER_LIST = 0x30,
     PLAYER_LIST = 0x31,
 
+    // Match History
+    REQUEST_MATCH_HISTORY = 0x32,
+    MATCH_HISTORY = 0x33,
+
     // Game
     GAME_START = 0x40,
     MOVE = 0x41,
