@@ -331,37 +331,120 @@ public:
         }
     }
 
-    void handleChallenge()
+    void handlePlayerListDecision(std::vector<PlayerListMessage::Player> &players)
     {
-        // Thách đấu người chơi khác
-        std::string opponent = UI::displayChallengeMenu();
-
-        // Nếu người dùng chọn quay lại
-        if (opponent == "<NO_USERNAME_PROVIDED>")
-            return;
-
-        // Nếu người dùng không chọn quay lại và nhập username
-        ChallengeRequestMessage challenge_request_msg;
-
-        challenge_request_msg.to_username = opponent;
-
         NetworkClient &network_client = NetworkClient::getInstance();
+        SessionData &session_data = SessionData::getInstance();
 
-        if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
+        /* Ask the user to choose an option
+         * 1. Challenge a player
+         * 2. Watch a player playing an ongoing match
+         * 3. Go back
+         */
+        UI::PlayerListDecision decision = UI::displayPlayerListOption();
+
+        /* Logic check */
+        
+
+        bool userOnline = false;
+
+        ChallengeRequestMessage challenge_request_msg;
+        RequestSpectateMessage request_spectate_msg;
+
+        switch (decision.choice)
         {
-            UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
-        }
-        else
-        {
-            UI::printInfoMessage("Đã gửi yêu cầu thách đấu. Đang chờ phản hồi...");
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-            // if the input was cancelled
-            if (SessionData::getInstance().shouldStop())
+        case 1: /* Thách đấu người khác */
+            // Kiểm tra username có trùng với bản thân không
+            if (decision.username == session_data.getUsername())
             {
-                std::cout << "shouldStop..." << std::endl;
+                UI::printErrorMessage("Không thể thách đấu với chính mình.");
+                handleGameMenu();
                 return;
             }
-            UI::printInfoMessage("Hết thời gian chờ đợi.");
+
+            // Kiểm tra người chơi có online không
+            for (const auto& player : players) {
+            if (player.username == decision.username) {
+                if (player.in_game) {
+                    UI::printErrorMessage("Người chơi đang trong trận đấu.");
+                    handleGameMenu();
+                    return;
+                }
+                userOnline = true;
+                break;
+                }
+            }
+
+            if (!userOnline) {
+                UI::printErrorMessage("Người chơi không online hoặc không tồn tại.");
+                handleGameMenu();
+                return;
+            }
+
+            challenge_request_msg.to_username = decision.username;
+
+            if (!network_client.sendPacket(challenge_request_msg.getType(), challenge_request_msg.serialize()))
+            {
+                UI::printErrorMessage("Gửi yêu cầu thách đấu thất bại.");
+                handleGameMenu();
+            }
+            else
+            {
+                UI::printInfoMessage("Đã gửi yêu cầu thách đấu. Đang chờ phản hồi...");
+                std::this_thread::sleep_for(std::chrono::seconds(10));
+                // if the input was cancelled
+                if (SessionData::getInstance().shouldStop())
+                {
+                    std::cout << "shouldStop..." << std::endl;
+                    return;
+                }
+                UI::printInfoMessage("Hết thời gian chờ đợi.");
+                handleGameMenu();
+            }
+            break;
+        case 2: /*Xem người chơi khác chơi*/ 
+            // Kiểm tra xem có định xem chính mình chơi không
+            if (decision.username == session_data.getUsername())
+            {
+                UI::printErrorMessage("Không thể xem chính mình chơi.");
+                handleGameMenu();
+                return;
+            }
+            // Kiểm tra người chơi có online không
+            for (const auto& player : players) {
+            if (player.username == decision.username) {
+                if (!player.in_game) {
+                    UI::printErrorMessage("Người chơi này hiện không trong trận đấu nào.");
+                    handleGameMenu();
+                    return;
+                }
+                userOnline = true;
+                break;
+                }
+            }
+
+            if (!userOnline) {
+                UI::printErrorMessage("Người chơi không online hoặc không tồn tại.");
+                handleGameMenu();
+                return;
+            }
+
+            request_spectate_msg.username = decision.username;
+            if (!network_client.sendPacket(request_spectate_msg.getType(), request_spectate_msg.serialize()))
+            {
+                UI::printErrorMessage("Gửi yêu cầu xem trận thất bại.");
+                handleGameMenu();
+            }
+            else {
+                UI::printInfoMessage("Đã gửi yêu cầu xem trận.");
+            }
+            break;
+        case 3:
+            handleGameMenu();
+            break;
+        default:
+            handleGameMenu();
+            break;
         }
     }
 
@@ -400,7 +483,7 @@ public:
                     continue;
                 }
             }
-            
+
             // create new response to challenge (accept = 1 /decline = 0)
             // this message will be used in both cases below
 
@@ -449,7 +532,6 @@ public:
     }
 
 private:
-
 }; // class LogicHandler
 
 #endif // LOGIC_HANDLER_HPP
