@@ -22,9 +22,6 @@ public:
     {
         switch (packet.type)
         {
-        case MessageType::SURRENDER:
-            handleSurrender(client_fd, packet.payload);
-            break;
         case MessageType::REGISTER:
             // Handle register
             handleRegister(client_fd, packet.payload);
@@ -76,6 +73,10 @@ public:
         case MessageType::SPECTATE_EXIT:
             // Handle spectator exit
             handleSpectateExit(client_fd, packet.payload);
+            break;
+
+        case MessageType::SURRENDER:
+            handleSurrender(client_fd, packet.payload);
             break;
 
         default:
@@ -226,7 +227,8 @@ private:
                 player.game_id = gameManager.getUserGameId(player.username);
             }
 
-            if (server.isUserLoggedIn(player.username)) {
+            if (server.isUserLoggedIn(player.username))
+            {
                 response.players.push_back(player);
             }
         }
@@ -251,15 +253,15 @@ private:
         {
             int to_client_fd = server.getClientFD(message.to_username);
 
-            // to complete 
+            // to complete
             ChallengeNotificationMessage notification_msg;
             notification_msg.from_username = server.getUsername(client_fd);
             notification_msg.elo = storage.getUserELO(notification_msg.from_username);
             std::vector<uint8_t> serialized = notification_msg.serialize();
             server.sendPacket(to_client_fd, notification_msg.getType(), serialized);
 
-            std::cout << "[CHALLENGE_NOTIFICATION] Sent challenge from " 
-                      << server.getUsername(client_fd) 
+            std::cout << "[CHALLENGE_NOTIFICATION] Sent challenge from "
+                      << server.getUsername(client_fd)
                       << " to " << message.to_username << std::endl;
         }
         else
@@ -287,7 +289,7 @@ private:
         if (message.response == ChallengeResponseMessage::Response::ACCEPTED)
         {
             std::string game_id = gameManager.createGame(challenger_username, challenged_username);
-            
+
             // Is handling PendingGame required? Review game_manager
 
             ChallengeAcceptedMessage challenge_accepted_msg;
@@ -312,7 +314,6 @@ private:
 
             network_server.sendPacket(challenger_fd, MessageType::GAME_START, gs_serialized);
             network_server.sendPacket(client_fd, MessageType::GAME_START, gs_serialized);
-
         }
         else
         {
@@ -374,13 +375,13 @@ private:
 
         std::cout << "[SPECTATE_EXIT] " << username << " exited spectating game " << game_id << std::endl;
     }
-};
-void handleSurrender(int client_fd, const std::vector<uint8_t> &payload)
+    
+    void handleSurrender(int client_fd, const std::vector<uint8_t> &payload)
     {
         SurrenderMessage message = SurrenderMessage::deserialize(payload);
 
         std::cout << "[SURRENDER] game_id: " << message.game_id
-                  << " , from_username: " << message.from_username << std::endl;
+                << " , from_username: " << message.from_username << std::endl;
 
         NetworkServer &server = NetworkServer::getInstance();
         GameManager &game_manager = GameManager::getInstance();
@@ -408,6 +409,7 @@ void handleSurrender(int client_fd, const std::vector<uint8_t> &payload)
         int opponent_fd = server.getClientFD(opponent_username);
         server.sendPacket(opponent_fd, end_message.getType(), serialized); // Đối thủ
     }
+};
 
 
 #endif // MESSAGE_HANDLER_HPP

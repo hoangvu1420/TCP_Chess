@@ -581,5 +581,20 @@
         "start_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         "start_time": 5122691847318,
         "white_username": "vu2"
+    },
+    "game_vu2_vu1_20241216095307_963": {
+        "black_username": "vu1",
+        "moves": [
+            {
+                "fen": "rnbqkbnr/pppppppp/8/8/8/5P2/PPPPP1PP/RNBQKBNR b KQkq - 0 1",
+                "move_time": 7320648027899,
+                "uci_move": "f2f3"
+            }
+        ],
+        "reason": "",
+        "result": "",
+        "start_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "start_time": 7313056415112,
+        "white_username": "vu2"
     }
 }

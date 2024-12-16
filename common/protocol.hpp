@@ -66,7 +66,7 @@ enum class MessageType : uint8_t
     SPECTATE_EXIT = 0x65,
     
     //SURRENDER
-    SURRENDER = 0x60,  
+    SURRENDER = 0x70,  
 };
 
 // Cấu trúc gói tin cơ bản
