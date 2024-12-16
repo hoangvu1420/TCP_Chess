@@ -48,6 +48,10 @@ public:
         return !isCurrentHandler();
     }
 
+    std::atomic<bool>& getRunningAtomic() {
+        return running;
+    }
+
     bool getRunning() const {
         return running.load();
     }

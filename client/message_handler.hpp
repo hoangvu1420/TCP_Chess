@@ -19,7 +19,7 @@ class MessageHandler
 public:
     /**
      * @brief Đẩy một gói tin mới vào hàng đợi xử lý
-     * 
+     *
      * Tạo một luồng mới để xử lý gói tin và chạy ngầm
      * @param packet Gói tin cần xử lý
      * @return true nếu đẩy thành công
@@ -28,7 +28,8 @@ public:
     {
         SessionData &session_data = SessionData::getInstance();
         // Start new handler thread
-        std::thread([this, packet, &session_data]() {
+        std::thread([this, packet, &session_data]()
+                    {
             {
                 session_data.setCurrentHandler(std::this_thread::get_id());
             }
@@ -37,8 +38,8 @@ public:
             
             if (session_data.isCurrentHandler()) {
                 session_data.setCurrentHandler(std::thread::id());
-            }
-        }).detach();
+            } })
+            .detach();
 
         return true;
     }
@@ -52,7 +53,8 @@ private:
      * @param packet Gói tin chứa thông điệp cần xử lý.
      * @return true nếu xử lý thành công, false nếu không xác định được loại thông điệp.
      */
-    bool handleMessage(const Packet &packet){
+    bool handleMessage(const Packet &packet)
+    {
         bool success = true;
         switch (packet.type)
         {
@@ -104,7 +106,7 @@ private:
             handleMatchDeclinedNotification(packet.payload);
             break;
 
-        // Add additional cases for other MessageTypes
+            // Add additional cases for other MessageTypes
 
         case MessageType::PLAYER_LIST:
             // Handle player list received from server
@@ -255,7 +257,7 @@ private:
                   << "Reason: " << message.reason << "\n"
                   << "Half_moves_count: " << message.half_moves_count
                   << std::endl;
-        
+
         // print the menu after game ends
         LogicHandler logic_handler;
         logic_handler.handleGameMenu();
@@ -285,15 +287,21 @@ private:
 
         for (const auto &player : message.players)
         {
-            std::cout << "Username: " << player.username << " - "
-                        << "ELO: " << player.elo 
-                        << " - Status: " << (player.in_game ? "Playing" : "Available")
-                        << std::endl;
+            std::cout << "Username: " << player.username << "\n"
+                      << "ELO: " << player.elo << std::endl;
         }
 
         LogicHandler logic_handler;
 
         logic_handler.handlePlayerListDecision(message.players);
+
+        SessionData &session_data = SessionData::getInstance();
+        if (session_data.shouldStop())
+        {
+            std::cout << "shouldStop..." << std::endl;
+            return;
+        }
+        logic_handler.handleGameMenu();
     }
 
     void handleChallengeNotification(const std::vector<uint8_t> &payload)
