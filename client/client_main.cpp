@@ -14,8 +14,7 @@ int main() {
     session_data.setRunning(true);
 
     // Start input thread
-    std::atomic<bool> running{true};
-    InputHandler::startInputThread(running);
+    InputHandler::startInputThread(session_data.getRunningAtomic());
 
     // Initial menu handling in a separate thread
     std::thread menu_thread([&]() {
@@ -39,7 +38,6 @@ int main() {
         }
     }
 
-    running = false; // Stop input thread
     std::cout << "Client đã đóng kết nối." << std::endl;
     return 0;
 }

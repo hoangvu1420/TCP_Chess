@@ -1,24 +1,38 @@
 {
     "viet1": {
-        "elo": 1210,
+        "elo": 1220,
         "match_history": [
             "game_viet2_viet1_20241209124943_803",
             "game_viet1_viet2_20241209130003_435",
             "game_viet2_viet1_20241209131103_134",
             "game_viet1_viet2_20241210210047_169",
             "game_viet1_viet2_20241210215828_49",
-            "game_viet1_viet2_20241210220116_510"
+            "game_viet1_viet2_20241210220116_510",
+            "game_viet2_viet1_20241216074358_360"
         ]
     },
     "viet2": {
-        "elo": 1190,
+        "elo": 1180,
         "match_history": [
             "game_viet2_viet1_20241209124943_803",
             "game_viet1_viet2_20241209130003_435",
             "game_viet2_viet1_20241209131103_134",
             "game_viet1_viet2_20241210210047_169",
             "game_viet1_viet2_20241210215828_49",
-            "game_viet1_viet2_20241210220116_510"
+            "game_viet1_viet2_20241210220116_510",
+            "game_viet2_viet1_20241216074358_360"
+        ]
+    },
+    "vu1": {
+        "elo": 1200,
+        "match_history": [
+            "game_vu2_vu1_20241216081601_224"
+        ]
+    },
+    "vu2": {
+        "elo": 1200,
+        "match_history": [
+            "game_vu2_vu1_20241216081601_224"
         ]
     }
 }

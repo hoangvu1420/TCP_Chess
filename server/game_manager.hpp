@@ -426,7 +426,7 @@ public:
      *
      * 2. Cập nhật trạng thái trò chơi và gửi thông báo cập nhật trạng thái đến cả hai người chơi.
      *
-     * 3. Kiểm tra xem trò chơi đã kết thúc chưa, nếu có thì gửi thông báo kết thúc trò chơi và loại bỏ trò chơi khỏi hệ thống.
+     * 3. Kiểm tra xem trò chơi đã kết thúc chưa, nếu có thì gửi thông báo kết thúc trò chơi, lưu kết quả và cập nhật ELO.
      *
      */
     void handleMove(int client_fd, const std::string &game_id, const std::string &uci_move)
@@ -535,6 +535,12 @@ public:
         }
     }
 
+    /**
+     * Dừng trò chơi cho client. Sử dụng khi một client ngắt kết nối.
+     * Gửi thông báo kết thúc trò chơi cho đối thủ và xóa trò chơi khỏi hệ thống.
+     *
+     * @param client_fd File descriptor của client.
+     */
     void stopGameForClient(int client_fd)
     {
         NetworkServer &network_server = NetworkServer::getInstance();
@@ -668,6 +674,12 @@ public:
         }
     }
 
+    /**
+     * @brief Xử lý từ chối ghép trận tự động của người chơi.
+     *
+     * @param client_fd Mã định danh kết nối của khách hàng đã từ chối.
+     * @param game_id ID của trận đấu bị từ chối.
+     */
     void handleAutoMatchDeclined(int client_fd, const std::string &game_id)
     {
         std::lock_guard<std::mutex> lock(games_mutex);
