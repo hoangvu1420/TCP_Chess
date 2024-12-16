@@ -47,6 +47,11 @@ public:
             // Handle auto match declined
             handleAutoMatchDeclined(client_fd, packet.payload);
             break;
+        
+        case MessageType::PLAY_WITH_BOT:
+            // Handle play with bot
+            handlePlayWithBot(client_fd, packet.payload);
+            break;
 
             // Add additional cases for other MessageTypes
 
@@ -332,6 +337,32 @@ private:
         }
     }
 
+    void handlePlayWithBot(int client_fd, const std::vector<uint8_t> &payload)
+    {
+        PlayWithBotMessage message = PlayWithBotMessage::deserialize(payload);
+        NetworkServer &network_server = NetworkServer::getInstance();
+        GameManager &gameManager = GameManager::getInstance();
+
+        std::string username = network_server.getUsername(client_fd);
+
+        std::cout << "[PLAY_WITH_BOT] from: " << username << std::endl;
+
+        std::string game_id = gameManager.createGameWithBot(username);
+
+        // Notify the player about the game start
+        GameStartMessage game_start_msg;
+        game_start_msg.game_id = game_id;
+        game_start_msg.player1_username = username;
+        game_start_msg.player2_username = "Bot";
+        game_start_msg.starting_player_username = username; // Player 1 starts
+        game_start_msg.fen = chess::constants::STARTPOS;
+
+        std::vector<uint8_t> serialized = game_start_msg.serialize();
+        network_server.sendPacket(client_fd, MessageType::GAME_START, serialized);
+
+        std::cout << "Game " << game_id << " started." << std::endl;
+    }
+
     void handleRequestSpectate(int client_fd, const std::vector<uint8_t> &payload)
     {
         RequestSpectateMessage message = RequestSpectateMessage::deserialize(payload);
@@ -386,7 +417,7 @@ private:
         SurrenderMessage message = SurrenderMessage::deserialize(payload);
 
         std::cout << "[SURRENDER] game_id: " << message.game_id
-                << " , from_username: " << message.from_username << std::endl;
+                  << ", from_username: " << message.from_username << std::endl;
 
         NetworkServer &server = NetworkServer::getInstance();
         GameManager &game_manager = GameManager::getInstance();
@@ -401,13 +432,14 @@ private:
         }
 
         // Dừng trận đấu
-        game_manager.endGame(message.game_id);
+        game_manager.endGameForSurrender(message.game_id, message.from_username);
 
         // Thông báo kết thúc trò chơi
         GameEndMessage end_message;
         end_message.game_id = message.game_id;
         end_message.winner_username = opponent_username;
         end_message.reason = surrendering_player + " has surrendered.";
+        end_message.half_moves_count = game_manager.getGameHalfMovesCount(message.game_id);
 
         std::vector<uint8_t> serialized = end_message.serialize();
         server.sendPacket(client_fd, end_message.getType(), serialized); // Người đầu hàng

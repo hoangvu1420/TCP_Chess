@@ -60,6 +60,8 @@ enum class MessageType : uint8_t
     AUTO_MATCH_ACCEPTED = 0x57,
     AUTO_MATCH_DECLINED = 0x58,
     MATCH_DECLINED_NOTIFICATION = 0x59,
+    // Play with bot
+    PLAY_WITH_BOT = 0x5A,
 
     // Spectate
     REQUEST_SPECTATE = 0x60,

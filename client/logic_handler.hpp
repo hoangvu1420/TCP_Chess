@@ -53,7 +53,7 @@ public:
             // if the input was cancelled
             if (session_data.shouldStop())
             {
-                std::cout << "shouldStop..." << std::endl;
+                // std::cout << "shouldStop..." << std::endl;
                 break;
             }
 
@@ -93,6 +93,7 @@ public:
                     break;
                 }
                 break;
+                
             }
             else if (choice == 3)
             {
@@ -122,7 +123,7 @@ public:
             // if result is empty, it means the input was cancelled
             if (session_data.shouldStop())
             {
-                std::cout << "shouldStop..." << std::endl;
+                // std::cout << "shouldStop..." << std::endl;
                 break;
             }
 
@@ -154,6 +155,20 @@ public:
             }
             else if (choice == 2)
             {
+                // Chơi với máy
+                PlayWithBotMessage play_with_bot_msg;
+                play_with_bot_msg.username = session_data.getUsername();
+
+                if (!network_client.sendPacket(play_with_bot_msg.getType(), play_with_bot_msg.serialize()))
+                {
+                    UI::printErrorMessage("Gửi yêu cầu chơi với máy thất bại.");
+                }
+
+                UI::printInfoMessage("Đang chơi với máy...");
+                break;
+            }
+            else if (choice == 3)
+            {
                 // Xem danh sách người chơi trực tuyến
                 RequestPlayerListMessage request_player_list_msg;
                 if (!network_client.sendPacket(request_player_list_msg.getType(), request_player_list_msg.serialize()))
@@ -164,7 +179,19 @@ public:
                 UI::printInfoMessage("Danh sách người chơi trực tuyến:");
                 break;
             }
-            else if (choice == 3)
+            else if (choice == 4)
+            {
+                // Xem lịch sử trận đấu
+                RequestMatchHistoryMessage request_match_history_msg;
+
+                if (!network_client.sendPacket(request_match_history_msg.getType(), request_match_history_msg.serialize()))
+                {
+                    UI::printErrorMessage("Tải lịch sử trận đấu thất bại.");
+                    break;
+                }
+                break;
+            }
+            else if (choice == 5)
             {
                 handleInitialMenu();
                 break;
@@ -193,7 +220,7 @@ public:
             // if the input was cancelled
             if (SessionData::getInstance().shouldStop())
             {
-                std::cout << "shouldStop..." << std::endl;
+                // std::cout << "shouldStop..." << std::endl;
                 break;
             }
 
@@ -306,7 +333,7 @@ public:
 
             if (session_data.shouldStop())
             {
-                std::cout << "shouldStop..." << std::endl;
+                // std::cout << "shouldStop..." << std::endl;
                 return;
             }
 
@@ -315,6 +342,7 @@ public:
                 // Gửi thông điệp đầu hàng
                 SurrenderMessage surrender_msg;
                 surrender_msg.game_id = session_data.getGameId();
+                surrender_msg.from_username = session_data.getUsername();
 
                 if (!network_client.sendPacket(surrender_msg.getType(), surrender_msg.serialize()))
                 {
@@ -408,7 +436,7 @@ public:
                 // if the input was cancelled
                 if (SessionData::getInstance().shouldStop())
                 {
-                    std::cout << "shouldStop..." << std::endl;
+                    // std::cout << "shouldStop..." << std::endl;
                     return;
                 }
                 UI::printInfoMessage("Hết thời gian chờ đợi.");
@@ -473,7 +501,7 @@ public:
             // if the input was cancelled
             if (SessionData::getInstance().shouldStop())
             {
-                std::cout << "shouldStop..." << std::endl;
+                // std::cout << "shouldStop..." << std::endl;
                 break;
             }
 

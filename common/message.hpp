@@ -811,6 +811,46 @@ struct MatchDeclinedNotificationMessage
 };
 #pragma endregion MatchDeclinedNotificationMessage
 
+#pragma region PlayWithBotMessage
+/*
+Send from client to server to play with bot.
+
+Payload structure:
+    - uint8_t username_length (1 byte)
+    - char[username_length] username (username_length bytes)
+*/
+
+struct PlayWithBotMessage
+{
+    std::string username;
+
+    MessageType getType() const
+    {
+        return MessageType::PLAY_WITH_BOT;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(username.size()));
+        payload.insert(payload.end(), username.begin(), username.end());
+
+        return payload;
+    }
+
+    static PlayWithBotMessage deserialize(const std::vector<uint8_t> &payload)
+    {
+        PlayWithBotMessage message;
+
+        size_t pos = 0;
+        uint8_t username_length = payload[pos++];
+        message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
+
+        return message;
+    }
+};
+
 #pragma region RequestPlayerListMessage 
 /*
 Send from client to server to request the list of players.
@@ -1389,60 +1429,52 @@ struct SurrenderMessage
 #pragma endregion SurrenderMessage
 
 #pragma region RequestMatchHistoryMessage
-struct RequestMatchHistoryMessage {
-    std::string username;
+/*
+Send from client to server to request the match history of the player.
 
+Payload structure:
+    - No payload
+*/
+struct RequestMatchHistoryMessage {
     MessageType getType() const {
         return MessageType::REQUEST_MATCH_HISTORY;
     }
 
     std::vector<uint8_t> serialize() const {
-        std::vector<uint8_t> payload;
-        payload.push_back(static_cast<uint8_t>(username.size()));
-        payload.insert(payload.end(), username.begin(), username.end());
-        return payload;
+        // No payload
+        return {};
     }
 
     static RequestMatchHistoryMessage deserialize(const std::vector<uint8_t>& payload) {
-        RequestMatchHistoryMessage message;
-        size_t pos = 0;
-        uint8_t username_length = payload[pos++];
-        message.username = std::string(payload.begin() + pos, payload.begin() + pos + username_length);
-        return message;
+        // No payload to deserialize
+        return RequestMatchHistoryMessage();
     }
 };
 #pragma endregion RequestMatchHistoryMessage
 
 #pragma region MatchHistoryMessage
+/*
+Send from server to client to provide the match history of a player.
+
+Payload structure:
+    - uint8_t number_of_matches (1 byte)
+    - [Match 1][Match 2]...
+
+Match structure:
+    - uint8_t game_id_length (1 byte)
+    - char[game_id_length] game_id (game_id_length bytes)
+    - uint8_t opponent_username_length (1 byte)
+    - char[opponent_username_length] opponent_username (opponent_username_length bytes)
+    - uint8_t won (1 byte)
+    - uint8_t date_length (1 byte)
+    - char[date_length] date (date_length bytes)
+*/
 struct MatchHistoryMessage {
     struct Match {
         std::string game_id;
         std::string opponent_username;
         bool won;
         std::string date;
-        std::vector<std::string> moves; 
-
-        std::vector<uint8_t> serializeMoves() const {
-            std::vector<uint8_t> serialized_moves;
-            serialized_moves.push_back(static_cast<uint8_t>(moves.size()));
-            for (const auto& move : moves) {
-                serialized_moves.push_back(static_cast<uint8_t>(move.size()));
-                serialized_moves.insert(serialized_moves.end(), move.begin(), move.end());
-            }
-            return serialized_moves;
-        }
-
-        static std::vector<std::string> deserializeMoves(const std::vector<uint8_t>& payload, size_t& pos) {
-            std::vector<std::string> moves;
-            uint8_t number_of_moves = payload[pos++];
-            for (uint8_t i = 0; i < number_of_moves; ++i) {
-                uint8_t move_length = payload[pos++];
-                std::string move(payload.begin() + pos, payload.begin() + pos + move_length);
-                pos += move_length;
-                moves.push_back(move);
-            }
-            return moves;
-        }
     };
 
     std::vector<Match> matches;
@@ -1466,10 +1498,6 @@ struct MatchHistoryMessage {
 
             payload.push_back(static_cast<uint8_t>(match.date.size()));
             payload.insert(payload.end(), match.date.begin(), match.date.end());
-
-            // Serialize moves
-            std::vector<uint8_t> moves_serialized = match.serializeMoves();
-            payload.insert(payload.end(), moves_serialized.begin(), moves_serialized.end());
         }
 
         return payload;
@@ -1497,9 +1525,6 @@ struct MatchHistoryMessage {
             uint8_t date_length = payload[pos++];
             match.date = std::string(payload.begin() + pos, payload.begin() + pos + date_length);
             pos += date_length;
-
-            // Deserialize moves
-            match.moves = Match::deserializeMoves(payload, pos);
 
             message.matches.push_back(match);
         }

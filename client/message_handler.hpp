@@ -298,7 +298,7 @@ private:
         SessionData &session_data = SessionData::getInstance();
         if (session_data.shouldStop())
         {
-            std::cout << "shouldStop..." << std::endl;
+            // std::cout << "shouldStop..." << std::endl;
             return;
         }
         logic_handler.handleGameMenu();

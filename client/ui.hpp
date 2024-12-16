@@ -113,8 +113,10 @@ namespace UI
         std::cout << "\n========= Game menu =========" << std::endl;
         std::cout << "Chọn hành động: " << std::endl;
         std::cout << "  1. Ghép trận tự động" << std::endl;
-        std::cout << "  2. Danh sách người chơi trực tuyến" << std::endl;
-        std::cout << "  3. Trở về" << std::endl;
+        std::cout << "  2. Chơi với máy" << std::endl;
+        std::cout << "  3. Danh sách người chơi trực tuyến" << std::endl;
+        std::cout << "  4. Lịch sử trận đấu" << std::endl;
+        std::cout << "  5. Trở về" << std::endl;
 
         std::cout << "> " << std::flush;
         std::string result = InputHandler::waitForInput();
