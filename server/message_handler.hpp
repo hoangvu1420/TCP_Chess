@@ -4,10 +4,14 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 
 #include "../common/protocol.hpp"
 #include "../common/message.hpp"
 #include "../common/const.hpp"
+#include "../common/utils.hpp"
 
 #include "data_storage.hpp"
 #include "network_server.hpp"
@@ -244,7 +248,6 @@ private:
         }
 
         server.sendPacket(client_fd, response.getType(), response.serialize());
-        std::cout << "Player list sent to " << server.getUsername(client_fd) << std::endl;
     }
 
     void handleChallengeRequest(int client_fd, const std::vector<uint8_t> &payload)
@@ -457,13 +460,22 @@ private:
 
         std::cout << "[REQUEST_MATCH_HISTORY] from " << username << std::endl;
 
-        // std::vector<MatchHistoryMessage::Match> matches = storage.getMatchHistory(username);
+        std::vector<MatchModel> matches = storage.getMatchHistory(username);
 
-        // MatchHistoryMessage response;
-        // response.matches = matches;
+        // Cast the matches to MatchHistoryMessage
+        MatchHistoryMessage response;
+        for (const MatchModel &match : matches)
+        {
+            MatchHistoryMessage::Match match_history;
+            match_history.game_id = match.game_id;
+            match_history.opponent_username = username == match.white_username ? match.black_username : match.white_username;
+            match_history.won = match.result == username;
+            match_history.date = match.start_time.time_since_epoch().count();
 
-        // server.sendPacket(client_fd, response.getType(), response.serialize());
-        std::cout << "Match history sent to " << username << std::endl;
+            response.matches.push_back(match_history);
+        }
+
+        server.sendPacket(client_fd, response.getType(), response.serialize());
     }
 };
 

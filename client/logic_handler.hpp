@@ -93,7 +93,6 @@ public:
                     break;
                 }
                 break;
-                
             }
             else if (choice == 3)
             {
@@ -385,7 +384,6 @@ public:
         UI::PlayerListDecision decision = UI::displayPlayerListOption();
 
         /* Logic check */
-        
 
         bool userOnline = false;
 
@@ -404,19 +402,23 @@ public:
             }
 
             // Kiểm tra người chơi có online không
-            for (const auto& player : players) {
-            if (player.username == decision.username) {
-                if (player.in_game) {
-                    UI::printErrorMessage("Người chơi đang trong trận đấu.");
-                    handleGameMenu();
-                    return;
-                }
-                userOnline = true;
-                break;
+            for (const auto &player : players)
+            {
+                if (player.username == decision.username)
+                {
+                    if (player.in_game)
+                    {
+                        UI::printErrorMessage("Người chơi đang trong trận đấu.");
+                        handleGameMenu();
+                        return;
+                    }
+                    userOnline = true;
+                    break;
                 }
             }
 
-            if (!userOnline) {
+            if (!userOnline)
+            {
                 UI::printErrorMessage("Người chơi không online hoặc không tồn tại.");
                 handleGameMenu();
                 return;
@@ -443,7 +445,7 @@ public:
                 handleGameMenu();
             }
             break;
-        case 2: /*Xem người chơi khác chơi*/ 
+        case 2: /*Xem người chơi khác chơi*/
             // Kiểm tra xem có định xem chính mình chơi không
             if (decision.username == session_data.getUsername())
             {
@@ -452,19 +454,23 @@ public:
                 return;
             }
             // Kiểm tra người chơi có online không
-            for (const auto& player : players) {
-            if (player.username == decision.username) {
-                if (!player.in_game) {
-                    UI::printErrorMessage("Người chơi này hiện không trong trận đấu nào.");
-                    handleGameMenu();
-                    return;
-                }
-                userOnline = true;
-                break;
+            for (const auto &player : players)
+            {
+                if (player.username == decision.username)
+                {
+                    if (!player.in_game)
+                    {
+                        UI::printErrorMessage("Người chơi này hiện không trong trận đấu nào.");
+                        handleGameMenu();
+                        return;
+                    }
+                    userOnline = true;
+                    break;
                 }
             }
 
-            if (!userOnline) {
+            if (!userOnline)
+            {
                 UI::printErrorMessage("Người chơi không online hoặc không tồn tại.");
                 handleGameMenu();
                 return;
@@ -476,7 +482,8 @@ public:
                 UI::printErrorMessage("Gửi yêu cầu xem trận thất bại.");
                 handleGameMenu();
             }
-            else {
+            else
+            {
                 UI::printInfoMessage("Đã gửi yêu cầu xem trận.");
             }
             break;
@@ -570,6 +577,42 @@ public:
                 break;
             }
         }
+    }
+
+    void handleMatchHistoryDecision()
+    {
+        std::string result = UI::displayMatchHistoryDecision();
+
+        // if the input was cancelled
+        if (SessionData::getInstance().shouldStop())
+        {
+            // std::cout << "shouldStop..." << std::endl;
+            return;
+        }
+
+        if (result == "2")
+        {
+            handleGameMenu();
+            return;
+        }
+
+        // Xem lại trận đấu
+        std::string game_id = result;
+
+        // RequestMatchDataMessage request_match_data_msg;
+        // request_match_data_msg.game_id = game_id;
+
+        // NetworkClient &network_client = NetworkClient::getInstance();
+
+        // if (!network_client.sendPacket(request_match_data_msg.getType(), request_match_data_msg.serialize()))
+        // {
+        //     UI::printErrorMessage("Gửi yêu cầu xem lại trận đấu thất bại.");
+        //     handleGameMenu();
+        // }
+        // else
+        // {
+        //     UI::printInfoMessage("Đã gửi yêu cầu xem lại trận đấu.");
+        // }
     }
 
 private:

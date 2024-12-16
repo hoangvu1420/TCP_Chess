@@ -207,6 +207,24 @@ namespace UI
         return result;
     }
 
+    std::string displayMatchHistoryDecision()
+    {
+        std::cout << "\n===== Lịch sử trận đấu =====" << std::endl;
+        std::cout << "1. Xem lại trận đấu" << std::endl;
+        std::cout << "2. Quay lại" << std::endl;
+
+        std::cout << "> " << std::flush;
+        std::string result = InputHandler::waitForInput();
+
+        if (result == "1")
+        {
+            std::cout << "Nhập ID trận đấu: " << std::flush;
+            result = InputHandler::waitForInput();
+        }
+
+        return result;
+    }
+
 } // namespace UI
 
 #endif // UI_HPP

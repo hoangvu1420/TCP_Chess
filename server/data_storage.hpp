@@ -43,13 +43,13 @@ struct MatchModel
     std::string white_username;
     std::string black_username;
     std::string start_fen;
-    std::chrono::time_point<std::chrono::steady_clock> start_time;
+    std::chrono::time_point<std::chrono::system_clock> start_time;
 
     struct Move
     {
         std::string uci_move;
         std::string fen;
-        std::chrono::time_point<std::chrono::steady_clock> move_time;
+        std::chrono::time_point<std::chrono::system_clock> move_time;
     };
 
     std::vector<Move> moves;
@@ -88,14 +88,14 @@ struct MatchModel
         game.white_username = j.at("white_username").get<std::string>();
         game.black_username = j.at("black_username").get<std::string>();
         game.start_fen = j.at("start_fen").get<std::string>();
-        game.start_time = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::nanoseconds(j.at("start_time").get<int64_t>()));
+        game.start_time = std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds(j.at("start_time").get<int64_t>()));
 
         for (const auto &move_json : j.at("moves"))
         {
             MatchModel::Move move;
             move.uci_move = move_json.at("uci_move").get<std::string>();
             move.fen = move_json.at("fen").get<std::string>();
-            move.move_time = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::nanoseconds(move_json.at("move_time").get<int64_t>()));
+            move.move_time = std::chrono::time_point<std::chrono::system_clock>(std::chrono::nanoseconds(move_json.at("move_time").get<int64_t>()));
             game.moves.push_back(move);
         }
 
@@ -238,7 +238,7 @@ public:
             white_username,
             black_username,
             start_fen,
-            std::chrono::steady_clock::now(),
+            std::chrono::system_clock::now(),
             {}, // moves ban đầu là rỗng
             "", // result ban đầu
             ""  // reason ban đầu
@@ -306,12 +306,33 @@ public:
             MatchModel::Move move;
             move.uci_move = uci_move;
             move.fen = fen;
-            move.move_time = std::chrono::steady_clock::now();
+            move.move_time = std::chrono::system_clock::now();
             it->second.moves.push_back(move);
             saveMatchesData();
             return true;
         }
         return false;
+    }
+
+    /**
+     * @brief Lấy lịch sử trận đấu của một người chơi.
+     *
+     * @param username Tên người chơi cần lấy lịch sử.
+     * @return std::vector<MatchModel> chứa lịch sử trận đấu của người chơi.
+     */
+    std::vector<MatchModel> getMatchHistory(const std::string &username)
+    {
+        std::lock_guard<std::mutex> lock(matches_mutex);
+
+        std::vector<MatchModel> match_history;
+        for (const auto &[game_id, match] : matches)
+        {
+            if (match.white_username == username || match.black_username == username)
+            {
+                match_history.push_back(match);
+            }
+        }
+        return match_history;
     }
 
 private:

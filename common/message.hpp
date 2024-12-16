@@ -1469,7 +1469,7 @@ Match structure:
     - uint8_t date_length (1 byte)
     - char[date_length] date (date_length bytes)
 */
-struct MatchHistoryMessage {
+struct  MatchHistoryMessage {
     struct Match {
         std::string game_id;
         std::string opponent_username;

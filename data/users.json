@@ -6,7 +6,7 @@
         ]
     },
     "viet1": {
-        "elo": 1240,
+        "elo": 1250,
         "match_history": [
             "game_viet2_viet1_20241209124943_803",
             "game_viet1_viet2_20241209130003_435",
@@ -22,11 +22,13 @@
             "game_viet1_viet2_20241216111334_403",
             "game_viet1_viet2_20241216190223_685",
             "game_viet1_bot_20241216211212_86",
-            "game_viet1_bot_20241216212050_963"
+            "game_viet1_bot_20241216212050_963",
+            "game_viet2_viet1_20241216215629_215",
+            "game_viet2_viet1_20241216215907_700"
         ]
     },
     "viet2": {
-        "elo": 1170,
+        "elo": 1160,
         "match_history": [
             "game_viet2_viet1_20241209124943_803",
             "game_viet1_viet2_20241209130003_435",
@@ -42,7 +44,9 @@
             "game_viet2_viet1_20241216111133_855",
             "game_viet1_viet2_20241216111334_403",
             "game_viet1_viet2_20241216190223_685",
-            "game_viet2_bot_20241216213606_735"
+            "game_viet2_bot_20241216213606_735",
+            "game_viet2_viet1_20241216215629_215",
+            "game_viet2_viet1_20241216215907_700"
         ]
     },
     "vu1": {
