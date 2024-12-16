@@ -1340,5 +1340,51 @@ struct SpectateExitMessage
     }
 };
 #pragma endregion SpectateExitMessage
+#pragma region SurrenderMessage
+/*
+Send from client to server to surrender the game.
 
+Payload structure:
+    - uint8_t game_id_length (1 byte)
+    - char[game_id_length] game_id (game_id_length bytes)
+*/
+struct SurrenderMessage
+{
+    std::string game_id;
+    std::string from_username;
+
+    MessageType getType() const
+    {
+        return MessageType::SURRENDER;
+    }
+
+    std::vector<uint8_t> serialize() const
+    {
+        std::vector<uint8_t> payload;
+
+        payload.push_back(static_cast<uint8_t>(game_id.size()));
+        payload.insert(payload.end(), game_id.begin(), game_id.end());
+
+        payload.push_back(static_cast<uint8_t>(from_username.size()));
+        payload.insert(payload.end(), from_username.begin(), from_username.end());
+
+        return payload;
+    }
+
+    static SurrenderMessage deserialize(const std::vector<uint8_t>& payload)
+    {
+        SurrenderMessage message;
+
+        size_t pos = 0;
+        uint8_t game_id_length = payload[pos++];
+        message.game_id = std::string(payload.begin() + pos, payload.begin() + pos + game_id_length);
+        pos += game_id_length;
+
+        uint8_t from_username_length = payload[pos++];
+        message.from_username = std::string(payload.begin() + pos, payload.begin() + pos + from_username_length);
+
+        return message;
+    }
+};
+#pragma endregion SurrenderMessage
 #endif // MESSAGE_HPP

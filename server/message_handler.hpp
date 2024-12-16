@@ -22,6 +22,9 @@ public:
     {
         switch (packet.type)
         {
+        case MessageType::SURRENDER:
+            handleSurrender(client_fd, packet.payload);
+            break;
         case MessageType::REGISTER:
             // Handle register
             handleRegister(client_fd, packet.payload);
@@ -372,5 +375,39 @@ private:
         std::cout << "[SPECTATE_EXIT] " << username << " exited spectating game " << game_id << std::endl;
     }
 };
+void handleSurrender(int client_fd, const std::vector<uint8_t> &payload)
+    {
+        SurrenderMessage message = SurrenderMessage::deserialize(payload);
+
+        std::cout << "[SURRENDER] game_id: " << message.game_id
+                  << " , from_username: " << message.from_username << std::endl;
+
+        NetworkServer &server = NetworkServer::getInstance();
+        GameManager &game_manager = GameManager::getInstance();
+
+        std::string surrendering_player = server.getUsername(client_fd);
+        std::string opponent_username = game_manager.getOpponent(message.game_id, surrendering_player);
+
+        if (opponent_username.empty())
+        {
+            std::cerr << "Error: Could not find opponent for game_id: " << message.game_id << std::endl;
+            return;
+        }
+
+        // Dừng trận đấu
+        game_manager.endGame(message.game_id);
+
+        // Thông báo kết thúc trò chơi
+        GameEndMessage end_message;
+        end_message.game_id = message.game_id;
+        end_message.winner_username = opponent_username;
+        end_message.reason = surrendering_player + " đã đầu hàng.";
+
+        std::vector<uint8_t> serialized = end_message.serialize();
+        server.sendPacket(client_fd, end_message.getType(), serialized); // Người đầu hàng
+        int opponent_fd = server.getClientFD(opponent_username);
+        server.sendPacket(opponent_fd, end_message.getType(), serialized); // Đối thủ
+    }
+
 
 #endif // MESSAGE_HANDLER_HPP

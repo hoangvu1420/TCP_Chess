@@ -304,10 +304,24 @@ public:
             // Lượt của người chơi
             std::string result = UI::getMove();
 
-            // Nếu người dùng không nhập nước đi
             if (session_data.shouldStop())
             {
                 std::cout << "shouldStop..." << std::endl;
+                return;
+            }
+
+            if (result == "surrender")
+            {
+                // Gửi thông điệp đầu hàng
+                SurrenderMessage surrender_msg;
+                surrender_msg.game_id = session_data.getGameId();
+
+                if (!network_client.sendPacket(surrender_msg.getType(), surrender_msg.serialize()))
+                {
+                    UI::printErrorMessage("Gửi thông điệp đầu hàng thất bại.");
+                    return;
+                }
+                UI::printInfoMessage("Bạn đã đầu hàng!");
                 return;
             }
 
@@ -330,7 +344,6 @@ public:
             UI::printInfoMessage("Đang chờ đối thủ ra nước đi...");
         }
     }
-
     void handlePlayerListDecision(std::vector<PlayerListMessage::Player> &players)
     {
         NetworkClient &network_client = NetworkClient::getInstance();

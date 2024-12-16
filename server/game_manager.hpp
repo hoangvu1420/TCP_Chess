@@ -812,6 +812,25 @@ public:
             );
         }
     }
+    std::string getOpponent(const std::string &game_id, const std::string &player)
+    {
+        auto game = games.find(game_id);
+        if (game == games.end())
+            return "";
+
+        if (game->second->player_white_name == player)
+            return game->second->player_black_name;
+        else if (game->second->player_black_name == player)
+            return game->second->player_white_name;
+
+        return "";
+    }
+
+    void endGame(const std::string &game_id)
+    {
+        games.erase(game_id);
+        std::cout << "Game " << game_id << " has been removed from active games." << std::endl;
+    }
 };
 
 #endif // GAME_MANAGER_HPP
