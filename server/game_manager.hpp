@@ -447,15 +447,15 @@ public:
 
     /**
      * @brief Xử lý nước đi của người chơi trong trò chơi cờ vua.
-     * 
+     *
      *  - Kiểm tra tính hợp lệ của nước đi.
-     * 
+     *
      *  - Cập nhật trạng thái trò chơi và lưu vào cơ sở dữ liệu.
-     * 
+     *
      *  - Thông báo cho người chơi và khán giả.
-     * 
+     *
      *  - Kiểm tra xem trò chơi đã kết thúc chưa.
-     * 
+     *
      *  - Nếu chơi với bot, xử lý nước đi của bot.
      *
      * @param client_fd ID kết nối của khách hàng.
@@ -471,23 +471,23 @@ public:
             std::string player_white_name = game->player_white_name;
             std::string player_black_name = game->player_black_name;
             bool is_game_with_bot = game->is_game_with_bot;
-    
+
             // Save the player's move to the database
             DataStorage &data_storage = DataStorage::getInstance();
             data_storage.addMove(game_id, uci_move, getGameFen(game_id));
-    
+
             // Notify players and spectators about the move
             notifyPlayersAndSpectators(game_id, game);
-    
+
             // Check if the game is over
             bool is_game_over = isGameOver(game_id);
-    
+
             if (is_game_over)
             {
                 endGame(game_id, game);
                 return;
             }
-    
+
             // If the game is against a bot and it's bot's turn, handle bot's move
             if (is_game_with_bot && getGameCurrentTurn(game_id) == "bot")
             {
@@ -501,29 +501,29 @@ public:
             InvalidMoveMessage invalid_move_msg;
             invalid_move_msg.game_id = game_id;
             invalid_move_msg.error_message = "Invalid move: " + uci_move;
-    
+
             std::vector<uint8_t> serialized = invalid_move_msg.serialize();
             network_server.sendPacket(client_fd, MessageType::INVALID_MOVE, serialized);
         }
     }
-    
+
     void notifyPlayersAndSpectators(const std::string &game_id, const std::shared_ptr<Game> &game)
     {
         std::string player_white_name = game->player_white_name;
         std::string player_black_name = game->player_black_name;
-    
+
         NetworkServer &network_server = NetworkServer::getInstance();
-    
+
         // Determine if the game is against a bot
         bool is_game_with_bot = game->is_game_with_bot;
-    
+
         // Prepare GameStatusUpdateMessage
         GameStatusUpdateMessage game_status_update_msg;
         game_status_update_msg.game_id = game_id;
         game_status_update_msg.fen = getGameFen(game_id);
         game_status_update_msg.current_turn_username = getGameCurrentTurn(game_id);
         game_status_update_msg.is_game_over = isGameOver(game_id);
-    
+
         if (game->isInCheck())
         {
             game_status_update_msg.message = "Check!";
@@ -532,47 +532,52 @@ public:
         {
             game_status_update_msg.message = "";
         }
-    
-        if (!is_game_with_bot) {
+
+        if (!is_game_with_bot)
+        {
             // Serialize and send the update to both players
             std::vector<uint8_t> serialized = game_status_update_msg.serialize();
             network_server.sendPacketToUsername(player_white_name, MessageType::GAME_STATUS_UPDATE, serialized);
             network_server.sendPacketToUsername(player_black_name, MessageType::GAME_STATUS_UPDATE, serialized);
-        } else {
+        }
+        else
+        {
             // Serialize and send the update only to the non-bot player
             std::vector<uint8_t> serialized = game_status_update_msg.serialize();
-            if (player_white_name != "bot") {
+            if (player_white_name != "bot")
+            {
                 network_server.sendPacketToUsername(player_white_name, MessageType::GAME_STATUS_UPDATE, serialized);
             }
-            if (player_black_name != "bot") {
+            if (player_black_name != "bot")
+            {
                 network_server.sendPacketToUsername(player_black_name, MessageType::GAME_STATUS_UPDATE, serialized);
             }
         }
-    
+
         // Prepare SpectateMoveMessage
         SpectateMoveMessage spectate_move_msg;
         spectate_move_msg.fen = game_status_update_msg.fen;
         spectate_move_msg.current_turn_username = game_status_update_msg.current_turn_username;
         spectate_move_msg.is_white = (game_status_update_msg.current_turn_username == player_white_name);
-    
+
         // Send the update to all spectators
         for (int spectator_fd : game_spectators[game_id])
         {
             network_server.sendPacket(spectator_fd, spectate_move_msg.getType(), spectate_move_msg.serialize());
         }
     }
-    
+
     void handleBotMove(const std::string &game_id, const std::shared_ptr<Game> &game)
     {
         DataStorage &data_storage = DataStorage::getInstance();
         NetworkServer &network_server = NetworkServer::getInstance();
-    
+
         // Get current FEN and determine bot's color
         std::string current_fen = getGameFen(game_id);
         chess::Color aiColor = (game->player_white_name == "bot") ? chess::Color::WHITE : chess::Color::BLACK;
-    
+
         // Get bot's move
-        chess::Move bot_move = ChessBot::getInstance().findBestMove(current_fen, aiColor);\
+        chess::Move bot_move = ChessBot::getInstance().findBestMove(current_fen, aiColor);
 
         std::string move = chess::uci::moveToUci(bot_move);
         if (move.empty())
@@ -581,16 +586,16 @@ public:
             std::cerr << "[ChessBot] Failed to generate a move for game_id: " << game_id << std::endl;
             return;
         }
-    
+
         // Apply bot's move
         if (makeMove(game_id, move))
         {
             // Save bot's move to the database
             data_storage.addMove(game_id, move, getGameFen(game_id));
-    
+
             // Notify players and spectators about bot's move
             notifyPlayersAndSpectators(game_id, game);
-    
+
             // Check if the game is over after bot's move
             bool is_game_over = isGameOver(game_id);
             if (is_game_over)
@@ -605,7 +610,7 @@ public:
             std::cerr << "[ChessBot] Invalid move detected for game_id: " << game_id << " Move: " << bot_move << std::endl;
         }
     }
-    
+
     /**
      * Kết thúc trò chơi, cập nhật kết quả và thông báo cho người chơi cũng như khán giả.
      *
@@ -616,30 +621,30 @@ public:
     {
         std::string player_white_name = game->player_white_name;
         std::string player_black_name = game->player_black_name;
-    
+
         // Wait briefly before ending the game
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    
+
         // Determine the winner and reason
         std::string winner = getGameWinner(game_id);
         std::string reason = getGameResultReason(game_id);
         uint16_t half_moves_count = getGameHalfMovesCount(game_id);
-    
+
         DataStorage &data_storage = DataStorage::getInstance();
         data_storage.updateMatchResult(game_id, winner, reason);
-    
+
         // Prepare and send GameEndMessage to both players
         GameEndMessage game_end_msg;
         game_end_msg.game_id = game_id;
         game_end_msg.winner_username = winner;
         game_end_msg.reason = reason;
         game_end_msg.half_moves_count = half_moves_count;
-    
+
         std::vector<uint8_t> serialized_end = game_end_msg.serialize();
         NetworkServer &network_server = NetworkServer::getInstance();
         network_server.sendPacketToUsername(player_white_name, MessageType::GAME_END, serialized_end);
         network_server.sendPacketToUsername(player_black_name, MessageType::GAME_END, serialized_end);
-    
+
         // Prepare and send SpectateEndMessage to all spectators
         SpectateEndMessage spectate_end_msg;
         for (int spectator_fd : game_spectators[game_id])
@@ -647,7 +652,7 @@ public:
             network_server.sendPacket(spectator_fd, spectate_end_msg.getType(), spectate_end_msg.serialize());
             removeSpectator(game_id, spectator_fd);
         }
-    
+
         // Update ELO ratings if the game is not against a bot
         if (!game->is_game_with_bot)
         {
@@ -655,7 +660,7 @@ public:
             uint16_t black_elo = data_storage.getUserELO(player_black_name);
             uint16_t new_white_elo = white_elo;
             uint16_t new_black_elo = black_elo;
-    
+
             if (winner == player_white_name)
             {
                 new_white_elo += 10;
@@ -671,12 +676,12 @@ public:
                 new_white_elo += 5;
                 new_black_elo += 5;
             }
-    
+
             // Update ELO ratings
             data_storage.updateUserELO(player_white_name, new_white_elo);
             data_storage.updateUserELO(player_black_name, new_black_elo);
         }
-    
+
         // Remove the game from active games
         removeGame(game_id);
     }
@@ -723,6 +728,16 @@ public:
                 removeSpectator(game_id, spectator_fd);
             }
             // End sending to spectators
+
+            // Update ELO ratings
+            DataStorage &data_storage = DataStorage::getInstance();
+            int current_elo = data_storage.getUserELO(username);
+            int current_opponent_elo = data_storage.getUserELO(opponent_name);
+            int new_elo = current_elo - 10;
+            int new_opponent_elo = current_opponent_elo + 10;
+
+            data_storage.updateUserELO(username, new_elo);
+            data_storage.updateUserELO(opponent_name, new_opponent_elo);
 
             // Remove the game from the system
             removeGame(game_id);
