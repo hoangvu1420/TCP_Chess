@@ -687,12 +687,18 @@ public:
     }
 
     /**
-     * Dừng trò chơi cho client. Sử dụng khi một client ngắt kết nối.
-     * Gửi thông báo kết thúc trò chơi cho đối thủ và xóa trò chơi khỏi hệ thống.
+     * Xử lý khi một client ngắt kết nối.
+     * 
+     * - Nếu client đó đang chơi trò chơi, thông báo cho đối thủ và kết thúc trò chơi.
+     * 
+     * - Nếu client đó đang xem trận đấu, thông báo kết thúc xem.
+     * 
+     * - Nếu client đó đang trong hàng đợi ghép trận, loại bỏ khỏi hàng đợi.
+     * 
      *
      * @param client_fd File descriptor của client.
      */
-    void stopGameForClient(int client_fd)
+    void clientDisconnected(int client_fd)
     {
         NetworkServer &network_server = NetworkServer::getInstance();
         std::string username = network_server.getUsername(client_fd);
@@ -742,6 +748,9 @@ public:
             // Remove the game from the system
             removeGame(game_id);
         }
+
+        // Remove the client from the matchmaking queue
+        removePlayerFromQueue(client_fd);
     }
 
     bool isGameOver(const std::string &game_id)
@@ -799,6 +808,22 @@ public:
             matchmaking_queue.push(client_fd);
         }
         cv.notify_one();
+    }
+
+    void removePlayerFromQueue(int client_fd)
+    {
+        std::lock_guard<std::mutex> lock(matchmaking_mutex);
+        std::queue<int> new_queue;
+        while (!matchmaking_queue.empty())
+        {
+            int front = matchmaking_queue.front();
+            matchmaking_queue.pop();
+            if (front != client_fd)
+            {
+                new_queue.push(front);
+            }
+        }
+        matchmaking_queue = new_queue;
     }
 
     /**
