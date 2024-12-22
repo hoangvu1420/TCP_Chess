@@ -38,15 +38,7 @@ enum class MessageType : uint8_t
     INVALID_MOVE = 0x42,
     GAME_STATUS_UPDATE = 0x43,
     GAME_END = 0x44,
-    RESIGN = 0x45,
-    DRAW_REQUEST = 0x46,
-    DRAW_NOTIFICATION = 0x47,
-    DRAW_RESPONSE = 0x48,
-    DRAW_DECLINED = 0x49,
-    REMATCH_REQUEST = 0x4A,
-    REMATCH_NOTIFICATION = 0x4B,
-    REMATCH_RESPONSE = 0x4C,
-    REMATCH_DECLINED = 0x4D,
+    SURRENDER = 0x45,
 
     // Challenge
     CHALLENGE_REQUEST = 0x50,
@@ -69,10 +61,7 @@ enum class MessageType : uint8_t
     SPECTATE_FAILURE = 0x62,
     SPECTATE_MOVE = 0x63,
     SPECTATE_END = 0x64,
-    SPECTATE_EXIT = 0x65,
-    
-    //SURRENDER
-    SURRENDER = 0x70,  
+    SPECTATE_EXIT = 0x65
 };
 
 // Cấu trúc gói tin cơ bản
