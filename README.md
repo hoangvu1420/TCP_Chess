@@ -55,3 +55,5 @@ Các tệp thực thi sẽ được tạo trong thư mục build.
 ```bash
 make clean
 ```
+### Dữ liệu mẫu
+- Các username mẫu để demo: `vu1`, `vu2`, `viet1`, `viet2`
